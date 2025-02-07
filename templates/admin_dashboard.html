@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard</title>
+</head>
+<body>
+    <h2>Admin Dashboard</h2>
+
+    <!-- Manage Subjects -->
+    <a href="#" onclick="toggleVisibility('subjects-container')">Manage Subjects</a>
+
+    <div id="subjects-container" style="display: none;">
+        <h3>Subjects</h3>
+        <button onclick="toggleVisibility('add-subject-form')">+ Add Subject</button>
+
+        <!-- Add Subject Form -->
+        <div id="add-subject-form" style="display: none;">
+            <form method="POST">
+                <input type="hidden" name="action" value="add_subject">
+                <label>Subject Name:</label>
+                <input type="text" name="subject_name" required>
+                <label>Description:</label>
+                <input type="text" name="subject_description">
+                <button type="submit">Add</button>
+            </form>
+        </div>
+
+        <ul>
+            {% for subject in subjects %}
+                <li>
+                    <strong>ID: {{ subject[0] }}</strong> - {{ subject[1] }}
+                    <a href="#" onclick="toggleVisibility('chapters-{{ subject[0] }}')">View Chapters</a>
+                    
+                    <!-- Add Chapter Form -->
+                    <button onclick="toggleVisibility('add-chapter-form-{{ subject[0] }}')">+ Add Chapter</button>
+                    <div id="add-chapter-form-{{ subject[0] }}" style="display: none;">
+                        <form method="POST">
+                            <input type="hidden" name="action" value="add_chapter">
+                            <input type="hidden" name="subject_id" value="{{ subject[0] }}">
+                            <label>Chapter Name:</label>
+                            <input type="text" name="chapter_name" required>
+                            <label>Description:</label>
+                            <input type="text" name="chapter_description">
+                            <button type="submit">Add</button>
+                        </form>
+                    </div>
+
+                    <!-- Chapters List -->
+                    <ul id="chapters-{{ subject[0] }}" style="display: none;">
+                        {% for chapter in subject_chapters[subject[0]] %}
+                            <li>
+                                <strong>ID: {{ chapter[0] }}</strong> - {{ chapter[2] }}
+                                <a href="#" onclick="toggleVisibility('questions-{{ chapter[0] }}')">View Questions</a>
+
+                                <!-- Add Question Form -->
+                                <button onclick="toggleVisibility('add-question-form-{{ chapter[0] }}')">+ Add Question</button>
+                                <div id="add-question-form-{{ chapter[0] }}" style="display: none;">
+                                    <form method="POST">
+                                        <input type="hidden" name="action" value="add_question">
+                                        <input type="hidden" name="chapter_id" value="{{ chapter[0] }}">
+                                        <label>Question:</label>
+                                        <input type="text" name="question_statement" required>
+                                        <label>Option 1:</label>
+                                        <input type="text" name="option1" required>
+                                        <label>Option 2:</label>
+                                        <input type="text" name="option2" required>
+                                        <label>Option 3:</label>
+                                        <input type="text" name="option3">
+                                        <label>Option 4:</label>
+                                        <input type="text" name="option4">
+                                        <label>Correct Option (1-4):</label>
+                                        <input type="number" name="correct_option" min="1" max="4" required>
+                                        <button type="submit">Add</button>
+                                    </form>
+                                </div>
+
+                                <!-- Questions List -->
+                                <ul id="questions-{{ chapter[0] }}" style="display: none;">
+                                    {% for question in chapter_questions[chapter[0]] %}
+                                        <li>
+                                            <strong>ID: {{ question[0] }}</strong> - {{ question[2] }}
+                                            <ul>
+                                                <li>1. {{ question[3] }}</li>
+                                                <li>2. {{ question[4] }}</li>
+                                                {% if question[5] %}<li>3. {{ question[5] }}</li>{% endif %}
+                                                {% if question[6] %}<li>4. {{ question[6] }}</li>{% endif %}
+                                                <li><strong>Correct Answer: {{ question[7] }}</strong></li>
+                                            </ul>
+                                        </li>
+                                    {% endfor %}
+                                </ul>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                </li>
+            {% endfor %}
+        </ul>
+    </div>
+
+    <script>
+        function toggleVisibility(id) {
+            var section = document.getElementById(id);
+            section.style.display = section.style.display === "none" ? "block" : "none";
+        }
+    </script>
+
+</body>
+</html>
