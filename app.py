@@ -117,10 +117,24 @@ def admin_dashboard():
                               VALUES (?, ?, ?, ?, ?, ?, ?)""", 
                            (chapter_id, question_statement, option1, option2, option3, option4, correct_option))
             connection.commit()
+            
+        # Create Quiz
+        elif action == "create_quiz":
+            quiz_title = request.form.get("quiz_title")
+            quiz_description = request.form.get("quiz_description")
+            selected_questions = request.form.getlist("selected_questions")
 
+            cursor.execute("INSERT INTO Quiz (title, description) VALUES (?, ?)", (quiz_title, quiz_description))
+            quiz_id = cursor.lastrowid  # Get the newly created quiz ID
+            print("Selected Questions:", selected_questions)
+            for question_id in selected_questions:
+                cursor.execute("INSERT INTO QuizQuestion (quiz_id, question_id) VALUES (?, ?)", (quiz_id, question_id))
+
+            connection.commit()
+            
         return redirect(url_for("admin_dashboard"))
 
-    # Fetch subjects & their chapters
+    # Fetch subjects, chapters, and questions
     cursor.execute("SELECT * FROM Subject")
     subjects = cursor.fetchall()
 
@@ -130,7 +144,9 @@ def admin_dashboard():
     cursor.execute("SELECT * FROM Question")
     questions = cursor.fetchall()
 
-    # Organize data
+    cursor.execute("SELECT * FROM Quiz")
+    quizzes = cursor.fetchall()
+    
     subject_chapters = {sub[0]: [] for sub in subjects}
     for ch in chapters:
         subject_chapters[ch[1]].append(ch)
@@ -141,8 +157,9 @@ def admin_dashboard():
 
     return render_template("admin_dashboard.html", 
                            subjects=subjects, 
-                           subject_chapters=subject_chapters, 
-                           chapter_questions=chapter_questions)
+                           chapters=subject_chapters, 
+                           questions=chapter_questions, 
+                           quizzes=quizzes)
 
 
 @app.route("/dashboard/user")
