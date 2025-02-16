@@ -24,6 +24,7 @@ def home():
 
         try:
             conn = sqlite3.connect(DATABASE)
+            conn.execute("PRAGMA foreign_keys = ON;")
             cursor = conn.cursor()
 
             if action == "signin":
@@ -83,9 +84,11 @@ def home():
 @app.route("/dashboard/admin", methods=["GET", "POST"])
 def admin_dashboard():
     connection = sqlite3.connect(DATABASE)
+    connection.execute("PRAGMA foreign_keys = ON;")
     cursor = connection.cursor()
+
     if session.get("role") != "admin":
-        return redirect(url_for("login"))
+        return redirect(url_for("home"))
 
     if request.method == "POST":
         action = request.form.get("action")
@@ -93,15 +96,42 @@ def admin_dashboard():
         if action == "add_subject":
             subject_name = request.form.get("subject_name")
             subject_description = request.form.get("subject_description")
-            cursor.execute("INSERT INTO Subject (name, description) VALUES (?, ?)", (subject_name, subject_description))
+            cursor.execute("INSERT INTO Subject (name, description) VALUES (?, ?)",
+                           (subject_name, subject_description))
+            connection.commit()
+
+        elif action == "edit_subject":
+            subject_id = request.form.get("subject_id")
+            subject_name = request.form.get("subject_name")
+            subject_description = request.form.get("subject_description")
+            cursor.execute("UPDATE Subject SET name = ?, description = ? WHERE id = ?",
+                           (subject_name, subject_description, subject_id))
+            connection.commit()
+
+        elif action == "delete_subject":
+            subject_id = request.form.get("subject_id")
+            cursor.execute("DELETE FROM Subject WHERE id = ?", (subject_id,))
             connection.commit()
 
         elif action == "add_chapter":
             subject_id = request.form.get("subject_id")
             chapter_name = request.form.get("chapter_name")
             chapter_description = request.form.get("chapter_description")
-            cursor.execute("INSERT INTO Chapter (subject_id, name, description) VALUES (?, ?, ?)", 
+            cursor.execute("INSERT INTO Chapter (subject_id, name, description) VALUES (?, ?, ?)",
                            (subject_id, chapter_name, chapter_description))
+            connection.commit()
+
+        elif action == "edit_chapter":
+            chapter_id = request.form.get("chapter_id")
+            chapter_name = request.form.get("chapter_name")
+            chapter_description = request.form.get("chapter_description")
+            cursor.execute("UPDATE Chapter SET name = ?, description = ? WHERE id = ?",
+                           (chapter_name, chapter_description, chapter_id))
+            connection.commit()
+
+        elif action == "delete_chapter":
+            chapter_id = request.form.get("chapter_id")
+            cursor.execute("DELETE FROM Chapter WHERE id = ?", (chapter_id,))
             connection.commit()
 
         elif action == "add_question":
@@ -114,24 +144,67 @@ def admin_dashboard():
             correct_option = request.form.get("correct_option")
             cursor.execute("""INSERT INTO Question 
                               (chapter_id, question_statement, option1, option2, option3, option4, correct_option) 
-                              VALUES (?, ?, ?, ?, ?, ?, ?)""", 
+                              VALUES (?, ?, ?, ?, ?, ?, ?)""",
                            (chapter_id, question_statement, option1, option2, option3, option4, correct_option))
             connection.commit()
-            
+
+        elif action == "edit_question":
+            question_id = request.form.get("question_id")
+            question_statement = request.form.get("question_statement")
+            option1 = request.form.get("option1")
+            option2 = request.form.get("option2")
+            option3 = request.form.get("option3")
+            option4 = request.form.get("option4")
+            correct_option = request.form.get("correct_option")
+            cursor.execute("""UPDATE Question 
+                              SET question_statement = ?, option1 = ?, option2 = ?, option3 = ?, option4 = ?, correct_option = ? 
+                              WHERE id = ?""",
+                           (question_statement, option1, option2, option3, option4, correct_option, question_id))
+            connection.commit()
+
+        elif action == "delete_question":
+            question_id = request.form.get("question_id")
+            cursor.execute("DELETE FROM Question WHERE id = ?", (question_id,))
+            connection.commit()
+
         # Create Quiz
         elif action == "create_quiz":
             quiz_title = request.form.get("quiz_title")
             quiz_description = request.form.get("quiz_description")
+            chapter_id = request.form.get("selected_chapter")
             selected_questions = request.form.getlist("selected_questions")
 
-            cursor.execute("INSERT INTO Quiz (title, description) VALUES (?, ?)", (quiz_title, quiz_description))
+            cursor.execute(
+                "INSERT INTO Quiz (title, description, chapter_id) VALUES (?, ?, ?)", (quiz_title, quiz_description, chapter_id))
             quiz_id = cursor.lastrowid  # Get the newly created quiz ID
             print("Selected Questions:", selected_questions)
             for question_id in selected_questions:
-                cursor.execute("INSERT INTO QuizQuestion (quiz_id, question_id) VALUES (?, ?)", (quiz_id, question_id))
+                cursor.execute(
+                    "INSERT INTO QuizQuestion (quiz_id, question_id) VALUES (?, ?)", (quiz_id, question_id))
 
             connection.commit()
-            
+
+        elif action == "edit_quiz":
+            quiz_id = request.form.get("quiz_id")
+            quiz_title = request.form.get("quiz_title")
+            quiz_description = request.form.get("quiz_description")
+            selected_questions = request.form.getlist("selected_questions")
+
+            cursor.execute("UPDATE Quiz SET title=?, description=? WHERE id=?", (quiz_title, quiz_description, quiz_id))
+            cursor.execute("DELETE FROM QuizQuestion WHERE quiz_id=?", (quiz_id,))
+
+            for question_id in selected_questions:
+                cursor.execute("INSERT INTO QuizQuestion (quiz_id, question_id) VALUES (?, ?)", (quiz_id, question_id))
+            connection.commit()
+
+
+        elif action == "delete_quiz":
+            quiz_id = request.form.get("quiz_id")
+            cursor.execute("DELETE FROM QuizQuestion WHERE quiz_id=?", (quiz_id,))
+            cursor.execute("DELETE FROM Quiz WHERE id=?", (quiz_id,))
+            connection.commit()
+
+
         return redirect(url_for("admin_dashboard"))
 
     # Fetch subjects, chapters, and questions
@@ -146,7 +219,7 @@ def admin_dashboard():
 
     cursor.execute("SELECT * FROM Quiz")
     quizzes = cursor.fetchall()
-    
+
     subject_chapters = {sub[0]: [] for sub in subjects}
     for ch in chapters:
         subject_chapters[ch[1]].append(ch)
@@ -155,11 +228,24 @@ def admin_dashboard():
     for q in questions:
         chapter_questions[q[1]].append(q)
 
-    return render_template("admin_dashboard.html", 
-                           subjects=subjects, 
-                           chapters=subject_chapters, 
-                           questions=chapter_questions, 
-                           quizzes=quizzes)
+    cursor.execute("SELECT quiz_id, question_id FROM QuizQuestion")
+    quiz_question_pairs = cursor.fetchall()
+
+    quiz_questions = {}
+    for quiz_id, question_id in quiz_question_pairs:
+        if quiz_id not in quiz_questions:
+            quiz_questions[quiz_id] = []
+        quiz_questions[quiz_id].append(question_id)
+
+    return render_template(
+        "admin_dashboard.html",
+        subjects=subjects,
+        chapters=subject_chapters,
+        questions=chapter_questions,
+        quizzes=quizzes,
+        quiz_questions=quiz_questions
+    )
+
 
 
 @app.route("/dashboard/user")
@@ -171,7 +257,7 @@ def user_dashboard():
 
 @app.route("/logout")
 def logout():
-    if "username" in session:
+    if "email" in session:
         logging.info(f"User '{session['email']}' logged out.")
     session.clear()
     return redirect(url_for("home"))

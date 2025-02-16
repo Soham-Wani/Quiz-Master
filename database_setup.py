@@ -59,17 +59,16 @@ CREATE TABLE IF NOT EXISTS Chapter (
 """)
 
 cursor.execute("""
--- Quiz table (Stores quiz metadata)
 CREATE TABLE IF NOT EXISTS Quiz (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     title TEXT NOT NULL,
     description TEXT,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    chapter_id INTEGER NOT NULL
 );
 """)
 
 cursor.execute("""
--- Quiz-Question mapping table (Many-to-Many Relationship)
 CREATE TABLE IF NOT EXISTS QuizQuestion (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     quiz_id INTEGER NOT NULL,
@@ -94,19 +93,19 @@ CREATE TABLE IF NOT EXISTS Question (
 );
 """)
 
-cursor.execute("""
-CREATE TABLE IF NOT EXISTS Score (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    quiz_id INTEGER NOT NULL,
-    user_id INTEGER NOT NULL,
-    timestamp_of_attempt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    total_scored INTEGER NOT NULL,
-    max_score INTEGER,
-    remarks TEXT,
-    FOREIGN KEY (quiz_id) REFERENCES Quiz (id) ON DELETE CASCADE,
-    FOREIGN KEY (user_id) REFERENCES User (id) ON DELETE CASCADE
-);
-""")
+# cursor.execute("""
+# CREATE TABLE IF NOT EXISTS Score (
+#     id INTEGER PRIMARY KEY AUTOINCREMENT,
+#     quiz_id INTEGER NOT NULL,
+#     user_id INTEGER NOT NULL,
+#     timestamp_of_attempt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+#     total_scored INTEGER NOT NULL,
+#     max_score INTEGER,
+#     remarks TEXT,
+#     FOREIGN KEY (quiz_id) REFERENCES Quiz (id) ON DELETE CASCADE,
+#     FOREIGN KEY (user_id) REFERENCES User (id) ON DELETE CASCADE
+# );
+# """)
 
 connection.commit()
 connection.close()

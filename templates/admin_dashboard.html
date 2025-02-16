@@ -38,6 +38,22 @@
 
                 <!-- Add Chapter Form -->
                 <button onclick="toggleVisibility('add-chapter-form-{{ subject[0] }}')">+ Add Chapter</button>
+                <button onclick="toggleVisibility('edit-subject-form-{{ subject[0] }}')">Edit</button>
+                <form method="POST" style="display:inline;">
+                    <input type="hidden" name="action" value="delete_subject">
+                    <input type="hidden" name="subject_id" value="{{ subject[0] }}">
+                    <button type="submit">Delete</button>
+                </form>
+                <!-- Edit Subject Form -->
+                <div id="edit-subject-form-{{ subject[0] }}" style="display: none;">
+                    <form method="POST">
+                        <input type="hidden" name="action" value="edit_subject">
+                        <input type="hidden" name="subject_id" value="{{ subject[0] }}">
+                        <label>New Name:</label>
+                        <input type="text" name="subject_name" value="{{ subject[1] }}" required>
+                        <button type="submit">Update</button>
+                    </form>
+                </div>
                 <div id="add-chapter-form-{{ subject[0] }}" style="display: none;">
                     <form method="POST">
                         <input type="hidden" name="action" value="add_chapter">
@@ -59,6 +75,23 @@
 
                         <!-- Add Question Form -->
                         <button onclick="toggleVisibility('add-question-form-{{ chapter[0] }}')">+ Add Question</button>
+                        <button onclick="toggleVisibility('edit-chapter-form-{{ chapter[0] }}')">Edit</button>
+                        <form method="POST" style="display:inline;">
+                            <input type="hidden" name="action" value="delete_chapter">
+                            <input type="hidden" name="chapter_id" value="{{ chapter[0] }}">
+                            <button type="submit">Delete</button>
+                        </form>
+
+                        <!-- Edit Chapter Form -->
+                        <div id="edit-chapter-form-{{ chapter[0] }}" style="display: none;">
+                            <form method="POST">
+                                <input type="hidden" name="action" value="edit_chapter">
+                                <input type="hidden" name="chapter_id" value="{{ chapter[0] }}">
+                                <label>New Name:</label>
+                                <input type="text" name="chapter_name" value="{{ chapter[2] }}" required>
+                                <button type="submit">Update</button>
+                            </form>
+                        </div>
                         <div id="add-question-form-{{ chapter[0] }}" style="display: none;">
                             <form method="POST">
                                 <input type="hidden" name="action" value="add_question">
@@ -84,6 +117,23 @@
                             {% for question in questions[chapter[0]] %}
                             <li>
                                 <strong>ID: {{ question[0] }}</strong> - {{ question[2] }}
+                                <button onclick="toggleVisibility('edit-question-form-{{ question[0] }}')">Edit</button>
+                                <form method="POST" style="display:inline;">
+                                    <input type="hidden" name="action" value="delete_question">
+                                    <input type="hidden" name="question_id" value="{{ question[0] }}">
+                                    <button type="submit">Delete</button>
+                                </form>
+
+                                <!-- Edit Question Form -->
+                                <div id="edit-question-form-{{ question[0] }}" style="display: none;">
+                                    <form method="POST">
+                                        <input type="hidden" name="action" value="edit_question">
+                                        <input type="hidden" name="question_id" value="{{ question[0] }}">
+                                        <label>New Question:</label>
+                                        <input type="text" name="question_statement" value="{{ question[2] }}" required>
+                                        <button type="submit">Update</button>
+                                    </form>
+                                </div>
                                 <ul>
                                     <li>1. {{ question[3] }}</li>
                                     <li>2. {{ question[4] }}</li>
@@ -110,33 +160,80 @@
         <div id="add-quiz-form" style="display: none;">
             <form method="POST">
                 <input type="hidden" name="action" value="create_quiz">
+
                 <label>Quiz Title:</label>
                 <input type="text" name="quiz_title" required>
+
                 <label>Description:</label>
                 <input type="text" name="quiz_description">
 
-                <h4>Select Questions</h4>
-                {% for subject in subjects %}
-                <h5>{{ subject[1] }}</h5>
-                {% for chapter in chapters[subject[0]] %}
-                <p><strong>{{ chapter[2] }}</strong></p>
-                {% for question in questions[chapter[0]] %}
-                <input type="checkbox" name="selected_questions" value="{{ question[0] }}">
-                <label>{{ question[2] }}
-                </label><br>
-                {% endfor %}
-                {% endfor %}
-                {% endfor %}
+                <!-- Subject Selection -->
+                <h4>Select a Subject</h4>
+                <select id="subject-selector" name="selected_subject" required onchange="updateChapters()">
+                    <option value="">-- Select a Subject --</option>
+                    {% for subject in subjects %}
+                    <option value="{{ subject[0] }}">{{ subject[1] }}</option>
+                    {% endfor %}
+                </select>
 
+                <!-- Chapter Selection (filtered by subject) -->
+                <h4>Select a Chapter</h4>
+                <select id="chapter-selector" name="selected_chapter" required onchange="filterQuestions()">
+                    <option value="">-- Select a Chapter --</option>
+                </select>
 
+                <!-- Question Selection (filtered by chapter) -->
+                <h4>Select Questions (Only from the selected chapter)</h4>
+                <div id="question-container"></div>
+
+                <!-- Submit Button -->
                 <button type="submit">Create Quiz</button>
             </form>
+
+
         </div>
 
         <h3>Existing Quizzes</h3>
         <ul>
             {% for quiz in quizzes %}
-            <li><strong>{{ quiz[1] }}</strong> - {{ quiz[2] }}</li>
+            <li><strong>{{ quiz[1] }}</strong> - {{ quiz[2] }}
+                <button onclick="toggleVisibility('edit-quiz-form-{{ quiz[0] }}')">Edit</button>
+                <form method="POST" style="display:inline;">
+                    <input type="hidden" name="action" value="delete_quiz">
+                    <input type="hidden" name="quiz_id" value="{{ quiz[0] }}">
+                    <button type="submit">Delete</button>
+                </form>
+
+                <!-- Edit Quiz Form -->
+                <div id="edit-quiz-form-{{ quiz[0] }}" style="display: none;">
+                    <form method="POST">
+                        <input type="hidden" name="action" value="edit_quiz">
+                        <input type="hidden" name="quiz_id" value="{{ quiz[0] }}">
+                        <label>Quiz Title:</label>
+                        <input type="text" name="quiz_title" value="{{ quiz[1] }}" required>
+                        <label>Description:</label>
+                        <input type="text" name="quiz_description" value="{{ quiz[2] }}">
+
+                        <h4>Select Questions</h4>
+                        <div id="edit-question-container-{{ quiz[0] }}">
+                            {% for key, tuples in questions.items() %}
+                            {% if key == quiz[4] %}
+                            {% for tuple in tuples %}
+                            <input type="checkbox" name="selected_questions" value="{{ tuple[0] }}" {% if tuple[0] in
+                                quiz_questions[quiz[0]] %} checked {% endif %}>
+                            <label>{{ tuple[2] }}</label><br>
+                            {% endfor %}
+                            {% endif %}
+                            {% endfor %}
+
+
+                        </div>
+
+                        <button type="submit">Update Quiz</button>
+                    </form>
+                </div>
+            </li>
+
             {% endfor %}
         </ul>
     </div>
@@ -145,6 +242,67 @@
         function toggleVisibility(id) {
             var section = document.getElementById(id);
             section.style.display = section.style.display === "none" ? "block" : "none";
+        }
+
+        function filterQuestions() {
+            var selectedChapter = document.getElementById("chapter-selector").value;
+            document.querySelectorAll(".question-group").forEach(group => {
+                group.style.display = "none";
+            });
+            if (selectedChapter) {
+                document.querySelectorAll(".chapter-" + selectedChapter).forEach(group => {
+                    group.style.display = "block";
+                });
+            }
+        }
+
+        var chapters = {{ chapters | tojson }};
+        var questions = {{ questions | tojson }};
+
+        function updateChapters() {
+            var subjectId = document.getElementById("subject-selector").value;
+            var chapterSelector = document.getElementById("chapter-selector");
+
+            // Reset chapter dropdown
+            chapterSelector.innerHTML = '<option value="">-- Select a Chapter --</option>';
+
+            // Populate chapters based on selected subject
+            if (subjectId && chapters[subjectId]) {
+                chapters[subjectId].forEach(chapter => {
+                    var option = document.createElement("option");
+                    option.value = chapter[0];
+                    option.textContent = chapter[2];
+                    chapterSelector.appendChild(option);
+                });
+            }
+
+            // Reset question container when subject changes
+            document.getElementById("question-container").innerHTML = "";
+        }
+
+        function filterQuestions() {
+            var chapterId = document.getElementById("chapter-selector").value;
+            var questionContainer = document.getElementById("question-container");
+
+            // Reset question container
+            questionContainer.innerHTML = "";
+
+            // Populate questions for the selected chapter
+            if (chapterId && questions[chapterId]) {
+                questions[chapterId].forEach(question => {
+                    var checkbox = document.createElement("input");
+                    checkbox.type = "checkbox";
+                    checkbox.name = "selected_questions";
+                    checkbox.value = question[0];
+
+                    var label = document.createElement("label");
+                    label.textContent = question[2];
+
+                    questionContainer.appendChild(checkbox);
+                    questionContainer.appendChild(label);
+                    questionContainer.appendChild(document.createElement("br"));
+                });
+            }
         }
     </script>
 
