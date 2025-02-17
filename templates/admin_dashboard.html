@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 
 <body>
@@ -12,7 +13,9 @@
 
     <!-- Manage Subjects -->
     <a href="#" onclick="toggleVisibility('subjects-container')">Manage Subjects</a> |
-    <a href="#" onclick="toggleVisibility('quizzes-container')">Manage Quizzes</a>
+    <a href="#" onclick="toggleVisibility('quizzes-container')">Manage Quizzes</a> |
+    <a href="#" onclick="toggleVisibility('search-container')">Search</a> |
+    <a href="#" onclick="toggleVisibility('charts-container')">View Summary</a>
 
     <div id="subjects-container" style="display: none;">
         <h3>Subjects</h3>
@@ -238,6 +241,21 @@
         </ul>
     </div>
 
+    <div id="search-container" style="display: none;">
+        <form id="search-form">
+            <input type="text" id="search-input" placeholder="Search..." onkeyup="searchData()">
+            <div id="search-results"></div>
+        </form>
+        <div id="search-results"></div>
+    </div>
+
+    <div id="charts-container" style="display: none;">
+        <canvas id="barChart"></canvas>
+        <canvas id="pieChart"></canvas>
+        <canvas id="doughnutChart"></canvas>
+        <canvas id="lineChart"></canvas>
+    </div>
+
     <script>
         function toggleVisibility(id) {
             var section = document.getElementById(id);
@@ -304,6 +322,104 @@
                 });
             }
         }
+
+        function searchData() {
+            let query = document.getElementById("search-input").value;
+
+            fetch(`/search?query=${query}`)
+                .then(response => response.json())
+                .then(data => {
+                    let resultsDiv = document.getElementById("search-results");
+                    resultsDiv.innerHTML = "";
+
+                    if (data.users.length > 0) {
+                        resultsDiv.innerHTML += "<h4>Users</h4>";
+                        data.users.forEach(user => {
+                            resultsDiv.innerHTML += `<p>${user[1]} - ${user[2]}</p>`; // Adjust indices based on DB structure
+                        });
+                    }
+
+                    if (data.subjects.length > 0) {
+                        resultsDiv.innerHTML += "<h4>Subjects</h4>";
+                        data.subjects.forEach(subject => {
+                            resultsDiv.innerHTML += `<p>${subject[1]}</p>`; // Adjust indices
+                        });
+                    }
+
+                    if (data.quizzes.length > 0) {
+                        resultsDiv.innerHTML += "<h4>Quizzes</h4>";
+                        data.quizzes.forEach(quiz => {
+                            resultsDiv.innerHTML += `<p>${quiz[1]}</p>`; // Adjust indices
+                        });
+                    }
+
+                    if (data.users.length === 0 && data.subjects.length === 0 && data.quizzes.length === 0) {
+                        resultsDiv.innerHTML = "<p>No results found.</p>";
+                    }
+                })
+                .catch(error => console.error("Error fetching search results:", error));
+        }
+
+        document.addEventListener("DOMContentLoaded", function () {
+            fetch("/admin/summary_data")
+                .then(response => response.json())
+                .then(data => {
+                    // Bar Chart - Total Users, Subjects, Quizzes, Questions
+                    const barCtx = document.getElementById("barChart").getContext("2d");
+                    new Chart(barCtx, {
+                        type: "bar",
+                        data: {
+                            labels: ["Users", "Subjects", "Quizzes", "Questions"],
+                            datasets: [{
+                                label: "Admin Summary",
+                                data: [data.total_users, data.total_subjects, data.total_quizzes, data.total_questions],
+                                backgroundColor: ["blue", "green", "orange", "red"]
+                            }]
+                        }
+                    });
+
+                    // Pie Chart - User Distribution
+                    const pieCtx = document.getElementById("pieChart").getContext("2d");
+                    new Chart(pieCtx, {
+                        type: "pie",
+                        data: {
+                            labels: ["Users", "Admins"],
+                            datasets: [{
+                                data: [data.total_users, data.total_admins],
+                                backgroundColor: ["cyan", "purple"]
+                            }]
+                        }
+                    });
+
+                    // Doughnut Chart - Quizzes vs Questions
+                    const doughnutCtx = document.getElementById("doughnutChart").getContext("2d");
+                    new Chart(doughnutCtx, {
+                        type: "doughnut",
+                        data: {
+                            labels: ["Quizzes", "Questions"],
+                            datasets: [{
+                                data: [data.total_quizzes, data.total_questions],
+                                backgroundColor: ["orange", "red"]
+                            }]
+                        }
+                    });
+
+                    // Line Chart - User Registrations Over Time
+                    const lineCtx = document.getElementById("lineChart").getContext("2d");
+                    new Chart(lineCtx, {
+                        type: "line",
+                        data: {
+                            labels: data.user_registrations.map(entry => entry[0]),
+                            datasets: [{
+                                label: "User Registrations (Last 7 Days)",
+                                data: data.user_registrations.map(entry => entry[1]),
+                                borderColor: "blue",
+                                fill: false
+                            }]
+                        }
+                    });
+                });
+        });
     </script>
 
 </body>
