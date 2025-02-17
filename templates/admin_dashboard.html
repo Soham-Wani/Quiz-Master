@@ -229,7 +229,23 @@
                         <input type="text" name="quiz_title" value="{{ quiz[1] }}" required>
                         <label>Description:</label>
                         <input type="text" name="quiz_description" value="{{ quiz[2] }}">
+                        <h4>Quiz Timing</h4>
+                        <label>Start Time:</label>
+                        <input type="datetime-local" name="start_time" value="{{ quiz[5] }}"
+                            id="edit_start_time_{{ quiz[0] }}" required onchange="validateEditStartTime({{ quiz[0] }})">
 
+                        <label>End Time:</label>
+                        <input type="datetime-local" name="end_time" value="{{ quiz[6] }}"
+                            id="edit_end_time_{{ quiz[0] }}" required onchange="validateEditEndTime({{ quiz[0] }})">
+
+                        <label>Duration (in minutes, leave empty for unlimited):</label>
+                        <input type="number" name="duration" value="{{ quiz[7] }}" id="edit_duration_{{ quiz[0] }}"
+                            min="1" onchange="validateEditDuration({{ quiz[0] }})">
+
+                        <p id="edit_time_error_{{ quiz[0] }}" style="color: red; display: none;">End time must be after
+                            start time!</p>
+                        <p id="edit_duration_error_{{ quiz[0] }}" style="color: red; display: none;">Duration cannot be
+                            more than the available time!</p>
                         <h4>Select Questions</h4>
                         <div id="edit-question-container-{{ quiz[0] }}">
                             {% for key, tuples in questions.items() %}
@@ -533,6 +549,76 @@
                     durationError.style.display = "none";
                 }
             }
+        }
+
+        function validateEditStartTime(quizId) {
+            let startTime = document.getElementById(`edit_start_time_${quizId}`).value;
+            let endTime = document.getElementById(`edit_end_time_${quizId}`).value;
+            let errorMsg = document.getElementById(`edit_time_error_${quizId}`);
+
+            if (startTime && endTime) {
+                let start = new Date(startTime);
+                let end = new Date(endTime);
+
+                if (end <= start) {
+                    errorMsg.style.display = "block";
+                    document.getElementById(`edit_start_time_${quizId}`).value = "";
+                } else {
+                    errorMsg.style.display = "none";
+                }
+            }
+        }
+
+        function validateEditEndTime(quizId) {
+            let startTime = document.getElementById(`edit_start_time_${quizId}`).value;
+            let endTime = document.getElementById(`edit_end_time_${quizId}`).value;
+            let errorMsg = document.getElementById(`edit_time_error_${quizId}`);
+
+            if (startTime && endTime) {
+                let start = new Date(startTime);
+                let end = new Date(endTime);
+
+                if (end <= start) {
+                    errorMsg.style.display = "block";
+                    document.getElementById(`edit_end_time_${quizId}`).value = "";
+                } else {
+                    errorMsg.style.display = "none";
+                }
+            }
+        }
+
+        function validateEditDuration(quizId) {
+            let startTime = document.getElementById(`edit_start_time_${quizId}`).value;
+            let endTime = document.getElementById(`edit_end_time_${quizId}`).value;
+            let durationInput = document.getElementById(`edit_duration_${quizId}`);
+            let durationError = document.getElementById(`edit_duration_error_${quizId}`);
+
+            if (startTime && endTime && durationInput.value) {
+                let start = new Date(startTime);
+                let end = new Date(endTime);
+                let maxDuration = (end - start) / (1000 * 60);  // Convert milliseconds to minutes
+
+                if (parseInt(durationInput.value) > maxDuration) {
+                    durationError.style.display = "block";
+                    durationInput.value = "";  // Reset invalid duration
+                } else {
+                    durationError.style.display = "none";
+                }
+            }
+        }
+
+        function validateEditQuizForm(form) {
+            let quizId = form.quiz_id.value;
+            validateEditStartTime(quizId);
+            validateEditEndTime(quizId);
+            validateEditDuration(quizId);
+
+            // Check if any error messages are displayed
+            if (document.getElementById(`edit_time_error_${quizId}`).style.display === "block" ||
+                document.getElementById(`edit_duration_error_${quizId}`).style.display === "block") {
+                return false; // Prevent form submission
+            }
+            return true; // Allow form submission
         }
 
         document.addEventListener("DOMContentLoaded", function () {
