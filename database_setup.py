@@ -64,7 +64,10 @@ CREATE TABLE IF NOT EXISTS Quiz (
     title TEXT NOT NULL,
     description TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    chapter_id INTEGER NOT NULL
+    chapter_id INTEGER NOT NULL,
+    start_time DATETIME DEFAULT NULL,
+    end_time DATETIME DEFAULT NULL,
+    duration INTEGER DEFAULT NULL
 );
 """)
 

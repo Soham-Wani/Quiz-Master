@@ -185,6 +185,21 @@
                     <option value="">-- Select a Chapter --</option>
                 </select>
 
+                <!-- Quiz Timing Options -->
+                <h4>Quiz Timing</h4>
+                <label>Start Time:</label>
+                <input type="datetime-local" name="start_time" id="start_time" onchange="validateStartTime()">
+
+                <label>End Time:</label>
+                <input type="datetime-local" name="end_time" id="end_time" onchange="validateEndTime()">
+
+                <label>Duration (in minutes, leave empty for unlimited):</label>
+                <input type="number" name="duration" id="duration" min="1" onchange="validateDuration()">
+
+                <p id="time-error" style="color: red; display: none;">End time must be after start time!</p>
+                <p id="duration-error" style="color: red; display: none;">Duration cannot be more than the available
+                    time!</p>
+
                 <!-- Question Selection (filtered by chapter) -->
                 <h4>Select Questions (Only from the selected chapter)</h4>
                 <div id="question-container"></div>
@@ -192,8 +207,6 @@
                 <!-- Submit Button -->
                 <button type="submit">Create Quiz</button>
             </form>
-
-
         </div>
 
         <h3>Existing Quizzes</h3>
@@ -420,6 +433,119 @@
                     });
                 });
         });
+
+        let currentTime = getCurrentTime();
+
+        function getCurrentTime() {
+            let now = new Date();
+            now.setMinutes(now.getMinutes() - now.getTimezoneOffset()); // Adjust for timezone offset
+            return now.toISOString().slice(0, 16); // Format for datetime-local
+        }
+
+        function validateStartTime() {
+            let startTime = document.getElementById("start_time").value;
+            let endTime = document.getElementById("end_time").value;
+            let errorMsg = document.getElementById("time-error");
+            let durationInput = document.getElementById("duration");
+            let durationError = document.getElementById("duration-error");
+
+            if (start < currentTime) {
+                errorMsg.style.display = "block";
+                document.getElementById("start_time").value = "";
+            } else {
+                errorMsg.style.display = "none";
+            }
+
+            if (startTime && endTime) {
+                let start = new Date(startTime);
+                let end = new Date(endTime);
+
+                if (end <= start) {
+                    errorMsg.style.display = "block";
+                    document.getElementById("start_time").value = "";
+                } else {
+                    errorMsg.style.display = "none";
+                }
+            }
+
+            if (startTime && endTime && durationInput.value) {
+                let start = new Date(startTime);
+                let end = new Date(endTime);
+                let maxDuration = (end - start) / (1000 * 60);  // Convert milliseconds to minutes
+
+                if (parseInt(durationInput.value) > maxDuration) {
+                    durationError.style.display = "block";
+                    document.getElementById("start_time").value = "";
+                } else {
+                    durationError.style.display = "none";
+                }
+            }
+        }
+
+        function validateEndTime() {
+            let startTime = document.getElementById("start_time").value;
+            let endTime = document.getElementById("end_time").value;
+            let errorMsg = document.getElementById("time-error");
+            let durationInput = document.getElementById("duration");
+            let durationError = document.getElementById("duration-error");
+
+            if (startTime && endTime) {
+                let start = new Date(startTime);
+                let end = new Date(endTime);
+
+                if (end <= start) {
+                    errorMsg.style.display = "block";
+                    document.getElementById("end_time").value = "";
+                } else {
+                    errorMsg.style.display = "none";
+                }
+            }
+
+            if (startTime && endTime && durationInput.value) {
+                let start = new Date(startTime);
+                let end = new Date(endTime);
+                let maxDuration = (end - start) / (1000 * 60);  // Convert milliseconds to minutes
+
+                if (parseInt(durationInput.value) > maxDuration) {
+                    durationError.style.display = "block";
+                    document.getElementById("end_time").value = "";
+                } else {
+                    durationError.style.display = "none";
+                }
+            }
+        }
+
+        function validateDuration() {
+            let startTime = document.getElementById("start_time").value;
+            let endTime = document.getElementById("end_time").value;
+            let durationInput = document.getElementById("duration");
+            let durationError = document.getElementById("duration-error");
+
+            if (startTime && endTime && durationInput.value) {
+                let start = new Date(startTime);
+                let end = new Date(endTime);
+                let maxDuration = (end - start) / (1000 * 60);  // Convert milliseconds to minutes
+
+                if (parseInt(durationInput.value) > maxDuration) {
+                    durationError.style.display = "block";
+                    durationInput.value = "";  // Reset invalid duration
+                } else {
+                    durationError.style.display = "none";
+                }
+            }
+        }
+
+        document.addEventListener("DOMContentLoaded", function () {
+            let forms = document.getElementsByTagName("form");
+            for (let form of forms) {
+                form.addEventListener("keydown", function (event) {
+                    if (event.key === "Enter") {
+                        event.preventDefault();
+                    }
+                });
+            }
+        });
+
     </script>
 
 </body>

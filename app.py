@@ -142,8 +142,9 @@ def admin_dashboard():
             option3 = request.form.get("option3")
             option4 = request.form.get("option4")
             correct_option = request.form.get("correct_option")
-            cursor.execute("""INSERT INTO Question 
-                              (chapter_id, question_statement, option1, option2, option3, option4, correct_option) 
+            cursor.execute("""INSERT INTO Question
+                              (chapter_id, question_statement, option1,
+                               option2, option3, option4, correct_option)
                               VALUES (?, ?, ?, ?, ?, ?, ?)""",
                            (chapter_id, question_statement, option1, option2, option3, option4, correct_option))
             connection.commit()
@@ -156,8 +157,8 @@ def admin_dashboard():
             option3 = request.form.get("option3")
             option4 = request.form.get("option4")
             correct_option = request.form.get("correct_option")
-            cursor.execute("""UPDATE Question 
-                              SET question_statement = ?, option1 = ?, option2 = ?, option3 = ?, option4 = ?, correct_option = ? 
+            cursor.execute("""UPDATE Question
+                              SET question_statement = ?, option1 = ?, option2 = ?, option3 = ?, option4 = ?, correct_option = ?
                               WHERE id = ?""",
                            (question_statement, option1, option2, option3, option4, correct_option, question_id))
             connection.commit()
@@ -172,12 +173,20 @@ def admin_dashboard():
             quiz_title = request.form.get("quiz_title")
             quiz_description = request.form.get("quiz_description")
             chapter_id = request.form.get("selected_chapter")
+
+            start_time = request.form.get("start_time") or None
+            end_time = request.form.get("end_time") or None
+            duration = request.form.get("duration") or None
             selected_questions = request.form.getlist("selected_questions")
 
-            cursor.execute(
-                "INSERT INTO Quiz (title, description, chapter_id) VALUES (?, ?, ?)", (quiz_title, quiz_description, chapter_id))
-            quiz_id = cursor.lastrowid  # Get the newly created quiz ID
-            print("Selected Questions:", selected_questions)
+            cursor.execute("""
+                INSERT INTO Quiz (title, description, chapter_id, start_time, end_time, duration)
+                VALUES (?, ?, ?, ?, ?, ?)
+            """, (quiz_title, quiz_description, chapter_id, start_time, end_time, duration))
+
+            quiz_id = cursor.lastrowid  # Get new quiz ID
+
+            # Insert selected questions into QuizQuestion table
             for question_id in selected_questions:
                 cursor.execute(
                     "INSERT INTO QuizQuestion (quiz_id, question_id) VALUES (?, ?)", (quiz_id, question_id))
@@ -189,9 +198,12 @@ def admin_dashboard():
             quiz_title = request.form.get("quiz_title")
             quiz_description = request.form.get("quiz_description")
             selected_questions = request.form.getlist("selected_questions")
+            start_time = request.form.get("start_time") or None
+            end_time = request.form.get("end_time") or None
+            duration = request.form.get("duration") or None
 
-            cursor.execute("UPDATE Quiz SET title=?, description=? WHERE id=?",
-                           (quiz_title, quiz_description, quiz_id))
+            cursor.execute("UPDATE Quiz SET title=?, description=?, start_time=?, end_time=?, duration=? WHERE id=?",
+                           (quiz_title, quiz_description, start_time, end_time, duration, quiz_id))
             cursor.execute(
                 "DELETE FROM QuizQuestion WHERE quiz_id=?", (quiz_id,))
 
@@ -350,6 +362,7 @@ def admin_summary_data():
         "total_questions": total_questions,
         "user_registrations": user_registrations
     })
+
 
 @app.route("/dashboard/user")
 def user_dashboard():
