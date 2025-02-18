@@ -2,6 +2,7 @@ import logging
 from flask import Flask, render_template, request, redirect, url_for, session, jsonify
 import sqlite3
 import hashlib
+from datetime import datetime, timedelta
 
 app = Flask(__name__)
 app.secret_key = "your_secret_key"
@@ -345,9 +346,9 @@ def admin_summary_data():
 
     # User Registrations Over Time (last 7 days)
     cursor.execute("""
-        SELECT strftime('%Y-%m-%d', dob) AS reg_date, COUNT(*) 
-        FROM User 
-        WHERE dob >= date('now', '-7 days') 
+        SELECT strftime('%Y-%m-%d', dob) AS reg_date, COUNT(*)
+        FROM User
+        WHERE dob >= date('now', '-7 days')
         GROUP BY reg_date
     """)
     user_registrations = cursor.fetchall()
@@ -366,9 +367,119 @@ def admin_summary_data():
 
 @app.route("/dashboard/user")
 def user_dashboard():
-    if "uid" in session and session.get("role") == "user":
-        return render_template("user_dashboard.html")
+    if "uid" in session:
+        user_id = session["uid"]
+        conn = sqlite3.connect(DATABASE)
+        cursor = conn.cursor()
+
+        # Fetch available quizzes
+        cursor.execute("SELECT * FROM Quiz")
+        quizzes = cursor.fetchall()
+
+        # Fetch user's quiz attempts
+        cursor.execute("""
+            SELECT qa.*, q.title
+            FROM QuizAttempts qa
+            JOIN Quiz q ON qa.quiz_id = q.id
+            WHERE qa.user_id = ?
+            ORDER BY qa.attempted_at DESC
+        """, (user_id,))
+        quiz_attempts = cursor.fetchall()
+
+        conn.close()
+        current_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        return render_template("user_dashboard.html", quizzes=quizzes, quiz_attempts=quiz_attempts, current_time=current_time)
     return redirect(url_for("home"))
+
+
+@app.route("/attempt_quiz/<int:quiz_id>", methods=["GET", "POST"])
+def attempt_quiz(quiz_id):
+    if "uid" not in session:
+        return redirect(url_for("home"))
+
+    user_id = session["uid"]
+    conn = sqlite3.connect(DATABASE)
+    cursor = conn.cursor()
+
+    if request.method == "POST":
+        score = int(request.form.get("score"))
+
+        # 🛑 Server-Side Timer Validation
+        start_time = session.get(f"quiz_start_{quiz_id}")
+        if not start_time:
+            return "Invalid attempt!", 403
+
+        elapsed_time = (datetime.now() - datetime.strptime(start_time,
+                        "%Y-%m-%d %H:%M:%S")).total_seconds()
+        cursor.execute("SELECT duration FROM Quiz WHERE id = ?", (quiz_id,))
+        quiz_duration = cursor.fetchone()[0]  # Get duration from database
+        if quiz_duration is None:
+            quiz_duration = float('inf')  # Set to infinity
+        else:
+            quiz_duration *= 60  # Convert to seconds
+
+        if elapsed_time > quiz_duration + 5:  # 5 sec buffer
+            return "Time limit exceeded!", 403
+
+        # ✅ Store Quiz Attempt
+        cursor.execute("INSERT INTO QuizAttempts (user_id, quiz_id, score) VALUES (?, ?, ?)",
+                       (user_id, quiz_id, score))
+        conn.commit()
+        conn.close()
+        return redirect(url_for("user_dashboard"))
+
+    # 📌 Fetch Quiz Details
+    cursor.execute(
+        "SELECT id, title, description, duration, chapter_id, start_time, end_time  FROM Quiz WHERE id = ?", (quiz_id,))
+    quiz = cursor.fetchone()
+
+    # 📌 Fetch Questions
+    cursor.execute("""
+        SELECT q.id, q.question_statement, q.option1, q.option2, q.option3, q.option4, q.correct_option
+        FROM Question q 
+        JOIN QuizQuestion qq ON q.id = qq.question_id 
+        WHERE qq.quiz_id = ?
+    """, (quiz_id,))
+    questions = cursor.fetchall()
+    current_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+
+    conn.close()
+
+    # ⏳ Store Quiz Start Time in Session
+    session[f"quiz_start_{quiz_id}"] = datetime.now().strftime(
+        "%Y-%m-%d %H:%M:%S")
+
+    return render_template("attempt_quiz.html", quiz=quiz, questions=questions, current_time=current_time)
+
+
+@app.route("/get_summary_data")
+def get_summary_data():
+    if "uid" not in session:
+        return jsonify([])
+
+    user_id = session["uid"]
+    conn = sqlite3.connect(DATABASE)
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT q.id, q.title, qa.score, qa.attempted_at
+        FROM QuizAttempts qa
+        JOIN Quiz q ON qa.quiz_id = q.id
+        WHERE qa.user_id = ?
+        ORDER BY qa.attempted_at ASC
+    """, (user_id,))
+    data = cursor.fetchall()
+    conn.close()
+    print(data)
+
+    return jsonify([{"qid": row[0], "title": row[1], "score": row[2], "attempted_at": row[3]} for row in data])
+
+
+# @app.route("/dashboard/user")
+# def user_dashboard():
+#     if "uid" in session and session.get("role") == "user":
+#         return render_template("user_dashboard.html")
+#     return redirect(url_for("home"))
 
 
 @app.route("/logout")

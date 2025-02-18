@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body>
+    <h1>Welcome to Your Dashboard</h1>
+
+    <h2>Available Quizzes</h2>
+    <ol>
+        {% for quiz in quizzes %}
+        <li>
+            <strong>{{ quiz["title"] }}</strong>
+            {% if not quiz[5] and not quiz[6] or (quiz[5] and quiz[6] and quiz[5] <= current_time and current_time
+                <=quiz[6]) or (quiz[5] and not quiz[6] and quiz[5] <=current_time) or (not quiz[5] and quiz[6] and
+                current_time <=quiz[6]) %} <a href="{{ url_for('attempt_quiz', quiz_id=quiz[0]) }}">Attempt {{ quiz[1]
+                }}</a>
+                {% else %}
+                <span>Quiz not available</span>
+                {% endif %}
+
+        </li>
+        {% endfor %}
+    </ol>
+
+    <h2>Your Quiz Attempts</h2>
+    <ul>
+        {% for attempt in quiz_attempts %}
+        <li>{{ attempt[2] }} - Score: {{ attempt[3] }} ({{ attempt[4] }})</li>
+        {% endfor %}
+    </ul>
+
+    <h2>Performance Summary</h2>
+    <div id="chartsContainer"></div>
+
+    <script>
+        async function loadChartData() {
+            const response = await fetch("/get_summary_data");
+            const data = await response.json();
+
+            if (!data || data.length === 0) {
+                document.getElementById("chartsContainer").innerHTML = "<p>No attempts available.</p>";
+                return;
+            }
+
+            const quizData = {};
+            data.forEach(entry => {
+                if (!quizData[entry.qid]) {
+                    quizData[entry.qid] = {
+                        title: entry.title,
+                        attempts: []
+                    };
+                }
+                quizData[entry.qid].attempts.push({
+                    date: entry.attempted_at,
+                    score: entry.score
+                });
+            });
+
+            const container = document.getElementById("chartsContainer");
+            container.innerHTML = "";
+
+            Object.keys(quizData).forEach(qid => {
+                const quiz = quizData[qid];
+                const chartContainer = document.createElement("div");
+                chartContainer.innerHTML = `<h3>${quiz.title}</h3><canvas id="chart_${qid}"></canvas>`;
+                container.appendChild(chartContainer);
+
+                new Chart(document.getElementById(`chart_${qid}`), {
+                    type: "line",
+                    data: {
+                        labels: quiz.attempts.map(a => a.date),
+                        datasets: [{
+                            label: "Score",
+                            data: quiz.attempts.map(a => a.score),
+                            borderColor: "blue",
+                            fill: false
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        scales: {
+                            y: {
+                                beginAtZero: true
+                            }
+                        }
+                    }
+                });
+            });
+        }
+
+        loadChartData();
+    </script>
+</body>
+
+</html>

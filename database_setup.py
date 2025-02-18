@@ -96,19 +96,17 @@ CREATE TABLE IF NOT EXISTS Question (
 );
 """)
 
-# cursor.execute("""
-# CREATE TABLE IF NOT EXISTS Score (
-#     id INTEGER PRIMARY KEY AUTOINCREMENT,
-#     quiz_id INTEGER NOT NULL,
-#     user_id INTEGER NOT NULL,
-#     timestamp_of_attempt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-#     total_scored INTEGER NOT NULL,
-#     max_score INTEGER,
-#     remarks TEXT,
-#     FOREIGN KEY (quiz_id) REFERENCES Quiz (id) ON DELETE CASCADE,
-#     FOREIGN KEY (user_id) REFERENCES User (id) ON DELETE CASCADE
-# );
-# """)
+cursor.execute("""
+CREATE TABLE IF NOT EXISTS QuizAttempts (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    quiz_id INTEGER NOT NULL,
+    score INTEGER NOT NULL,
+    attempted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES Users(uid),
+    FOREIGN KEY (quiz_id) REFERENCES Quiz(id)
+);
+""")
 
 connection.commit()
 connection.close()

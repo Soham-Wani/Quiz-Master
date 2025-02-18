@@ -99,18 +99,26 @@
                             <form method="POST">
                                 <input type="hidden" name="action" value="add_question">
                                 <input type="hidden" name="chapter_id" value="{{ chapter[0] }}">
+
                                 <label>Question:</label>
                                 <input type="text" name="question_statement" required>
+
                                 <label>Option 1:</label>
-                                <input type="text" name="option1" required>
+                                <input type="text" name="option1" required oninput="updateOptions('{{ chapter[0] }}')">
+
                                 <label>Option 2:</label>
-                                <input type="text" name="option2" required>
+                                <input type="text" name="option2" required oninput="updateOptions('{{ chapter[0] }}')">
+
                                 <label>Option 3:</label>
-                                <input type="text" name="option3">
+                                <input type="text" name="option3" oninput="updateOptions('{{ chapter[0] }}')" disabled>
+
                                 <label>Option 4:</label>
-                                <input type="text" name="option4">
-                                <label>Correct Option (1-4):</label>
-                                <input type="number" name="correct_option" min="1" max="4" required>
+                                <input type="text" name="option4" oninput="updateOptions('{{ chapter[0] }}')" disabled>
+
+                                <label>Correct Option:</label>
+                                <input type="number" name="correct_option" id="correct-option-{{ chapter[0] }}" min="1"
+                                    max="2" required>
+
                                 <button type="submit">Add</button>
                             </form>
                         </div>
@@ -465,7 +473,7 @@
             let durationInput = document.getElementById("duration");
             let durationError = document.getElementById("duration-error");
 
-            if (start < currentTime) {
+            if (startTime < currentTime) {
                 errorMsg.style.display = "block";
                 document.getElementById("start_time").value = "";
             } else {
@@ -619,6 +627,34 @@
                 return false; // Prevent form submission
             }
             return true; // Allow form submission
+        }
+
+        function updateOptions(chapterId) {
+            let option1 = document.querySelector(`[name="option1"]`);
+            let option2 = document.querySelector(`[name="option2"]`);
+            let option3 = document.querySelector(`[name="option3"]`);
+            let option4 = document.querySelector(`[name="option4"]`);
+            let correctOptionInput = document.getElementById(`correct-option-${chapterId}`);
+
+            // Enable next option only if the previous one is filled
+            option2.disabled = option1.value.trim() === "";
+            option3.disabled = option2.value.trim() === "";
+            option4.disabled = option3.value.trim() === "";
+
+            // If option 3 is cleared, reset option 4 as well
+            if (option3.value.trim() === "") {
+                option4.value = "";
+            }
+
+            // Update max value for correct option
+            let count = 0;
+            [option1, option2, option3, option4].forEach((opt, index) => {
+                if (opt.value.trim() !== "") {
+                    count = index + 1;
+                }
+            });
+
+            correctOptionInput.max = count || 2;
         }
 
         document.addEventListener("DOMContentLoaded", function () {

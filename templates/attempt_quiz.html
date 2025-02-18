@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Attempt Quiz</title>
+</head>
+
+<body>
+    {% if not quiz[5] and not quiz[6] or (quiz[5] and quiz[6] and quiz[5] <= current_time and current_time <=quiz[6]) or
+        (quiz[5] and not quiz[6] and quiz[5] <=current_time) or (not quiz[5] and quiz[6] and current_time <=quiz[6]) %}
+        <h1>{{ quiz[1] }}</h1> <!-- quiz[1] = Title -->
+        <p>{{ quiz[2] }}</p> <!-- quiz[2] = Description -->
+
+        {% if quiz[3] %} <!-- quiz[3] = Duration (minutes) -->
+        <h3>Time Left: <span id="timer"></span></h3>
+        <script>
+            let timeLimit = {{ quiz[3] * 60 if quiz[3] else 'Infinity' }};
+            let timerElement = document.getElementById("timer");
+            let quizId = {{ quiz[0] }};  // quiz[0] = Quiz ID
+
+            // Retrieve remaining time from localStorage (prevents refresh reset)
+            let startTime = localStorage.getItem("quiz_start_time_" + quizId);
+            let currentTime = Math.floor(Date.now() / 1000);
+
+            if (!startTime) {
+                startTime = currentTime;
+                localStorage.setItem("quiz_start_time_" + quizId, startTime);
+            }
+
+            let elapsedTime = currentTime - startTime;
+            let timeLeft = Math.max(0, timeLimit - elapsedTime);
+
+            function updateTimer() {
+                let minutes = Math.floor(timeLeft / 60);
+                let seconds = timeLeft % 60;
+                timerElement.innerText = `${minutes}:${seconds < 10 ? "0" : ""}${seconds}`;
+                timeLeft--;
+
+                if (timeLeft < 0) {
+                    clearInterval(timerInterval);
+                    localStorage.removeItem("quiz_start_time_" + quizId); // Clear stored time
+                    document.getElementById("quiz-form").submit(); // Auto-submit
+                }
+            }
+
+            let timerInterval = setInterval(updateTimer, 1000);
+            updateTimer();
+        </script>
+        {% endif %}
+
+        <script>
+            let score = 0; // Initialize score
+
+            function updateScore() {
+                score = 0; // Reset score before recalculating
+                let selectedAnswer;
+                {% for question in questions %}
+                // Use a different variable name for each question
+                selectedAnswer = document.querySelector('input[name="q{{ question[0] }}"]:checked');
+                if (selectedAnswer && selectedAnswer.value == "{{ question[6] }}") { // Correct answer check
+                    score++;
+                }
+                {% endfor %}
+
+                document.getElementById("score").value = score;
+            }
+        </script>
+
+        <form method="POST" id="quiz-form">
+            {% for question in questions %}
+            <fieldset>
+                <legend>{{ question[1] }}</legend> <!-- question[1] = Question Statement -->
+                <label><input type="radio" name="q{{ question[0] }}" value="1" onchange="updateScore()"> {{ question[2] }}</label>
+                <!-- Option 1 -->
+                <label><input type="radio" name="q{{ question[0] }}" value="2" onchange="updateScore()"> {{ question[3] }}</label>
+                <!-- Option 2 -->
+                {% if question[4] %} <label><input type="radio" name="q{{ question[0] }}" value="3" onchange="updateScore()"> {{ question[4] }}</label> {% endif %} <!-- Option 3 -->
+                {% if question[5] %} <label><input type="radio" name="q{{ question[0] }}" value="4" onchange="updateScore()"> {{ question[5] }}</label> {% endif %} <!-- Option 4 -->
+            </fieldset>
+            {% endfor %}
+            <input type="hidden" name="score" id="score">
+            <button type="submit">Submit</button>
+        </form>
+
+        <script>
+            // Ensure form submits correctly
+            document.getElementById("quiz-form").onsubmit = function (event) {
+                console.log("Final Score on Submit:", score);
+                localStorage.removeItem("quiz_start_time_" + {{ quiz[0] }});
+            };
+        </script>
+
+        {% else %}
+        This quiz is not available at the moment.
+        {% endif %}
+
+</body>
+
+</html>
