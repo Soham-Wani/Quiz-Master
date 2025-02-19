@@ -6,45 +6,184 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>User Dashboard</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
+
+        body {
+            font-family: Poppins, serif;
+            background: linear-gradient(135deg, #ff6600, #ffdbca);
+            color: #333;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .title {
+            text-align: center;
+            color: #FF6600;
+        }
+
+        .tabs {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        .tab-btn {
+            background: #FF6600;
+            color: #fff;
+            border: none;
+            padding: 10px 15px;
+            margin: 0 5px;
+            cursor: pointer;
+            border-radius: 5px;
+            font-weight: bold;
+            font-size: medium;
+            transition: background 0.3s;
+        }
+
+        .tab-btn:hover,
+        .tab-btn.active {
+            background: #b44800;
+        }
+
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.5s ease-in-out;
+        }
+
+        .quiz-list,
+        .attempt-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .quiz-item,
+        .attempt-item {
+            background: linear-gradient(135deg, #fff3f3, #ffd9ca);
+            padding: 10px;
+            margin-bottom: 8px;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .quiz-link {
+            text-decoration: none;
+            color: #333;
+            font-weight: bold;
+        }
+
+        #chartsContainer {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            justify-content: center;
+        }
+
+        .chart-container {
+            width: 100%;
+            max-width: 400px;
+            padding: 10px;
+            background: linear-gradient(135deg, #fff3f3, #ffd9ca);
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        @media (min-width: 768px) {
+            .chart-container {
+                width: 40%;
+            }
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+    </style>
+
 </head>
 
 <body>
-    <h1>Welcome to Your Dashboard</h1>
+    <div class="container">
+        <h1 class="title">Hello {{ users[0][2] if users[0][2] else users[0][1] }}!</h1>
 
-    <h2>Available Quizzes</h2>
-    <ol>
-        {% for quiz in quizzes %}
-        <li>
-            <strong>{{ quiz["title"] }}</strong>
-            {% if not quiz[5] and not quiz[6] or (quiz[5] and quiz[6] and quiz[5] <= current_time and current_time
-                <=quiz[6]) or (quiz[5] and not quiz[6] and quiz[5] <=current_time) or (not quiz[5] and quiz[6] and
-                current_time <=quiz[6]) %} <a href="{{ url_for('attempt_quiz', quiz_id=quiz[0]) }}">Attempt {{ quiz[1]
-                }}</a>
-                {% else %}
-                <span>Quiz not available</span>
-                {% endif %}
+        <div class="tabs">
+            <button class="tab-btn active" onclick="showTab('quizzes', this)">Attempt</button>
+            <button class="tab-btn" onclick="showTab('attempts', this)">History</button>
+            <button class="tab-btn" onclick="showTab('charts', this)">Performance</button>
+        </div>
 
-        </li>
-        {% endfor %}
-    </ol>
+        <section id="quizzes" class="tab-content" style="display: block;">
+            <h2>Available Quizzes</h2>
+            <ol class="quiz-list">
+                {% for quiz in quizzes %}
+                {% if not quiz[5] and not quiz[6] or (quiz[5] and quiz[6] and quiz[5] <= current_time and current_time
+                    <=quiz[6]) or (quiz[5] and not quiz[6] and quiz[5] <=current_time) or (not quiz[5] and quiz[6] and
+                    current_time <=quiz[6]) %} <a href="{{ url_for('attempt_quiz', quiz_id=quiz[0]) }}"
+                    class="quiz-link">
+                    <li class="quiz-item">
+                        {{ quiz[1] }} (<span style="color: #FF6600;">{{ quiz[0]}}</span>)
+                        <span style="color: #8b8b8b;">{% if quiz[6] %}<br>End Time: {{ quiz[6][8:10] }}-{{ quiz[6][5:7]
+                            }}-{{ quiz[6][0:4] }} ({{ quiz[6][11:16] }}) {% endif %}<br>{% if quiz[7] %}{{ quiz[7] }}
+                            minutes {% else %} No time limit {% endif %}</span>
+                    </li></a>
+                    {% endif %}
+                    {% endfor %}
+            </ol>
+        </section>
 
-    <h2>Your Quiz Attempts</h2>
-    <ul>
-        {% for attempt in quiz_attempts %}
-        <li>{{ attempt[2] }} - Score: {{ attempt[3] }} ({{ attempt[4] }})</li>
-        {% endfor %}
-    </ul>
+        <section id="attempts" class="tab-content" style="display: none;">
+            <h2>Your Previous Attempts</h2>
+            <ul class="attempt-list">
+                {% for attempt in quiz_attempts %}
+                <li class="attempt-item">
+                    <b>{% for quiz in quizzes %}
+                        {% if attempt[2] == quiz[0] %} {{ quiz[1] }} {% endif %}
+                        {% endfor %} ({{ attempt[2] }})</b> - {{ attempt[4][8:10] }}-{{ attempt[4][5:7] }}-{{
+                    attempt[4][0:4] }} {{ attempt[4][11:16] }}<br>Score: {{ attempt[3] }}
+                </li>
+                {% endfor %}
+            </ul>
+        </section>
 
-    <h2>Performance Summary</h2>
-    <div id="chartsContainer"></div>
+        <section id="charts" class="tab-content" style="display: none;">
+            <h2>Performance Summary</h2>
+            <div id="chartsContainer"></div>
+        </section>
+    </div>
 
     <script>
+        function showTab(tabId, element) {
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.style.display = 'none';
+            });
+            document.getElementById(tabId).style.display = 'block';
+
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            element.classList.add('active');
+        }
+
         async function loadChartData() {
             const response = await fetch("/get_summary_data");
             const data = await response.json();
 
             if (!data || data.length === 0) {
-                document.getElementById("chartsContainer").innerHTML = "<p>No attempts available.</p>";
+                document.getElementById("chartsContainer").innerHTML = "<p class='no-data'>No attempts available.</p>";
                 return;
             }
 
@@ -68,17 +207,21 @@
             Object.keys(quizData).forEach(qid => {
                 const quiz = quizData[qid];
                 const chartContainer = document.createElement("div");
-                chartContainer.innerHTML = `<h3>${quiz.title}</h3><canvas id="chart_${qid}"></canvas>`;
+                chartContainer.classList.add("chart-container");
+                chartContainer.innerHTML = `<h3 class='chart-title'>${quiz.title} (${qid})</h3><canvas id="chart_${qid}"></canvas>`;
                 container.appendChild(chartContainer);
 
                 new Chart(document.getElementById(`chart_${qid}`), {
                     type: "line",
                     data: {
-                        labels: quiz.attempts.map(a => a.date),
+                        labels: quiz.attempts.map(a => {
+                            let date = new Date(a.date);
+                            return `${date.getDate()}-${date.getMonth() + 1} (${date.getHours()}:${date.getMinutes().toString().padStart(2, '0')})`;
+                        }),
                         datasets: [{
                             label: "Score",
                             data: quiz.attempts.map(a => a.score),
-                            borderColor: "blue",
+                            borderColor: "#FF6600",
                             fill: false
                         }]
                     },

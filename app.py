@@ -386,9 +386,12 @@ def user_dashboard():
         """, (user_id,))
         quiz_attempts = cursor.fetchall()
 
+        cursor.execute("SELECT * FROM User WHERE uid = ?", (user_id,))
+        users = cursor.fetchall()
+
         conn.close()
         current_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-        return render_template("user_dashboard.html", quizzes=quizzes, quiz_attempts=quiz_attempts, current_time=current_time)
+        return render_template("user_dashboard.html", quizzes=quizzes, quiz_attempts=quiz_attempts, current_time=current_time, users=users)
     return redirect(url_for("home"))
 
 
