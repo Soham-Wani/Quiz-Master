@@ -2,7 +2,7 @@ import logging
 from flask import Flask, render_template, request, redirect, url_for, session, jsonify
 import sqlite3
 import hashlib
-from datetime import datetime, timedelta
+from datetime import datetime
 
 app = Flask(__name__)
 app.secret_key = "your_secret_key"
@@ -153,15 +153,10 @@ def admin_dashboard():
         elif action == "edit_question":
             question_id = request.form.get("question_id")
             question_statement = request.form.get("question_statement")
-            option1 = request.form.get("option1")
-            option2 = request.form.get("option2")
-            option3 = request.form.get("option3")
-            option4 = request.form.get("option4")
-            correct_option = request.form.get("correct_option")
             cursor.execute("""UPDATE Question
-                              SET question_statement = ?, option1 = ?, option2 = ?, option3 = ?, option4 = ?, correct_option = ?
+                              SET question_statement = ?
                               WHERE id = ?""",
-                           (question_statement, option1, option2, option3, option4, correct_option, question_id))
+                           (question_statement, question_id))
             connection.commit()
 
         elif action == "delete_question":
@@ -181,13 +176,12 @@ def admin_dashboard():
             selected_questions = request.form.getlist("selected_questions")
 
             cursor.execute("""
-                INSERT INTO Quiz (title, description, chapter_id, start_time, end_time, duration)
-                VALUES (?, ?, ?, ?, ?, ?)
-            """, (quiz_title, quiz_description, chapter_id, start_time, end_time, duration))
+                INSERT INTO Quiz (title, description, chapter_id, start_time, end_time, duration, questions)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+            """, (quiz_title, quiz_description, chapter_id, start_time, end_time, duration, len(selected_questions)))
 
-            quiz_id = cursor.lastrowid  # Get new quiz ID
+            quiz_id = cursor.lastrowid
 
-            # Insert selected questions into QuizQuestion table
             for question_id in selected_questions:
                 cursor.execute(
                     "INSERT INTO QuizQuestion (quiz_id, question_id) VALUES (?, ?)", (quiz_id, question_id))
@@ -203,8 +197,8 @@ def admin_dashboard():
             end_time = request.form.get("end_time") or None
             duration = request.form.get("duration") or None
 
-            cursor.execute("UPDATE Quiz SET title=?, description=?, start_time=?, end_time=?, duration=? WHERE id=?",
-                           (quiz_title, quiz_description, start_time, end_time, duration, quiz_id))
+            cursor.execute("UPDATE Quiz SET title=?, description=?, start_time=?, end_time=?, duration=?, questions=? WHERE id=?",
+                           (quiz_title, quiz_description, start_time, end_time, duration, len(selected_questions), quiz_id))
             cursor.execute(
                 "DELETE FROM QuizQuestion WHERE quiz_id=?", (quiz_id,))
 
@@ -224,7 +218,6 @@ def admin_dashboard():
 
     search_query = request.args.get("search", "").strip()
 
-    # Fetch Users
     if search_query:
         cursor.execute("SELECT * FROM User WHERE email LIKE ? OR username LIKE ?",
                        (f"%{search_query}%", f"%{search_query}%"))
@@ -232,7 +225,6 @@ def admin_dashboard():
         cursor.execute("SELECT * FROM User")
     users = cursor.fetchall()
 
-    # Fetch Subjects
     if search_query:
         cursor.execute("SELECT * FROM Subject WHERE name LIKE ?",
                        (f"%{search_query}%",))
@@ -240,7 +232,6 @@ def admin_dashboard():
         cursor.execute("SELECT * FROM Subject")
     subjects = cursor.fetchall()
 
-    # Fetch Quizzes
     if search_query:
         cursor.execute("SELECT * FROM Quiz WHERE title LIKE ?",
                        (f"%{search_query}%",))
@@ -266,7 +257,7 @@ def admin_dashboard():
 
     chapter_questions = {ch[0]: [] for ch in chapters}
     for q in questions:
-        if q[1] in chapter_questions:  # Check if the chapter exists before appending
+        if q[1] in chapter_questions:
             chapter_questions[q[1]].append(q)
         else:
             print(
@@ -298,17 +289,14 @@ def search():
     connection.execute("PRAGMA foreign_keys = ON;")
     cursor = connection.cursor()
 
-    # Fetch Users
     cursor.execute("SELECT * FROM User WHERE email LIKE ? OR username LIKE ?",
                    (f"%{search_query}%", f"%{search_query}%"))
     users = cursor.fetchall()
 
-    # Fetch Subjects
     cursor.execute("SELECT * FROM Subject WHERE name LIKE ?",
                    (f"%{search_query}%",))
     subjects = cursor.fetchall()
 
-    # Fetch Quizzes
     cursor.execute("SELECT * FROM Quiz WHERE title LIKE ?",
                    (f"%{search_query}%",))
     quizzes = cursor.fetchall()
@@ -327,14 +315,9 @@ def admin_summary_data():
     conn = sqlite3.connect(DATABASE)
     cursor = conn.cursor()
 
-    # Total Users Breakdown
     cursor.execute("SELECT COUNT(*) FROM User WHERE role='user'")
     total_users = cursor.fetchone()[0]
 
-    cursor.execute("SELECT COUNT(*) FROM User WHERE role='admin'")
-    total_admins = cursor.fetchone()[0]
-
-    # Subjects and Quizzes
     cursor.execute("SELECT COUNT(*) FROM Subject")
     total_subjects = cursor.fetchone()[0]
 
@@ -344,9 +327,8 @@ def admin_summary_data():
     cursor.execute("SELECT COUNT(*) FROM Question")
     total_questions = cursor.fetchone()[0]
 
-    # User Registrations Over Time (last 7 days)
     cursor.execute("""
-        SELECT strftime('%Y-%m-%d', dob) AS reg_date, COUNT(*)
+        SELECT strftime('%Y-%m-%d', created_at) AS reg_date, COUNT(*)
         FROM User
         WHERE dob >= date('now', '-7 days')
         GROUP BY reg_date
@@ -357,7 +339,6 @@ def admin_summary_data():
 
     return jsonify({
         "total_users": total_users,
-        "total_admins": total_admins,
         "total_subjects": total_subjects,
         "total_quizzes": total_quizzes,
         "total_questions": total_questions,
@@ -372,11 +353,9 @@ def user_dashboard():
         conn = sqlite3.connect(DATABASE)
         cursor = conn.cursor()
 
-        # Fetch available quizzes
         cursor.execute("SELECT * FROM Quiz")
         quizzes = cursor.fetchall()
 
-        # Fetch user's quiz attempts
         cursor.execute("""
             SELECT qa.*, q.title
             FROM QuizAttempts qa
@@ -405,9 +384,9 @@ def attempt_quiz(quiz_id):
     cursor = conn.cursor()
 
     if request.method == "POST":
-        score = int(request.form.get("score"))
+        score = int(request.form.get("score")
+                    if request.form.get("score") else 0)
 
-        # 🛑 Server-Side Timer Validation
         start_time = session.get(f"quiz_start_{quiz_id}")
         if not start_time:
             return "Invalid attempt!", 403
@@ -415,28 +394,25 @@ def attempt_quiz(quiz_id):
         elapsed_time = (datetime.now() - datetime.strptime(start_time,
                         "%Y-%m-%d %H:%M:%S")).total_seconds()
         cursor.execute("SELECT duration FROM Quiz WHERE id = ?", (quiz_id,))
-        quiz_duration = cursor.fetchone()[0]  # Get duration from database
+        quiz_duration = cursor.fetchone()[0]
         if quiz_duration is None:
-            quiz_duration = float('inf')  # Set to infinity
+            quiz_duration = float('inf')
         else:
-            quiz_duration *= 60  # Convert to seconds
+            quiz_duration *= 60
 
-        if elapsed_time > quiz_duration + 5:  # 5 sec buffer
+        if elapsed_time > quiz_duration + 5:
             return "Time limit exceeded!", 403
 
-        # ✅ Store Quiz Attempt
         cursor.execute("INSERT INTO QuizAttempts (user_id, quiz_id, score) VALUES (?, ?, ?)",
                        (user_id, quiz_id, score))
         conn.commit()
         conn.close()
         return redirect(url_for("user_dashboard"))
 
-    # 📌 Fetch Quiz Details
     cursor.execute(
         "SELECT id, title, description, duration, chapter_id, start_time, end_time  FROM Quiz WHERE id = ?", (quiz_id,))
     quiz = cursor.fetchone()
 
-    # 📌 Fetch Questions
     cursor.execute("""
         SELECT q.id, q.question_statement, q.option1, q.option2, q.option3, q.option4, q.correct_option
         FROM Question q 
@@ -448,7 +424,6 @@ def attempt_quiz(quiz_id):
 
     conn.close()
 
-    # ⏳ Store Quiz Start Time in Session
     session[f"quiz_start_{quiz_id}"] = datetime.now().strftime(
         "%Y-%m-%d %H:%M:%S")
 
@@ -465,7 +440,7 @@ def get_summary_data():
     cursor = conn.cursor()
 
     cursor.execute("""
-        SELECT q.id, q.title, qa.score, qa.attempted_at
+        SELECT q.id, q.title, q.questions, qa.score, qa.attempted_at
         FROM QuizAttempts qa
         JOIN Quiz q ON qa.quiz_id = q.id
         WHERE qa.user_id = ?
@@ -475,14 +450,7 @@ def get_summary_data():
     conn.close()
     print(data)
 
-    return jsonify([{"qid": row[0], "title": row[1], "score": row[2], "attempted_at": row[3]} for row in data])
-
-
-# @app.route("/dashboard/user")
-# def user_dashboard():
-#     if "uid" in session and session.get("role") == "user":
-#         return render_template("user_dashboard.html")
-#     return redirect(url_for("home"))
+    return jsonify([{"qid": row[0], "title": row[1], "questions": row[2], "score": row[3], "attempted_at": row[4]} for row in data])
 
 
 @app.route("/logout")

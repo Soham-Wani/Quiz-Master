@@ -67,7 +67,8 @@ CREATE TABLE IF NOT EXISTS Quiz (
     chapter_id INTEGER NOT NULL,
     start_time DATETIME DEFAULT NULL,
     end_time DATETIME DEFAULT NULL,
-    duration INTEGER DEFAULT NULL
+    duration INTEGER DEFAULT NULL,
+    questions INTEGER DEFAULT 0
 );
 """)
 

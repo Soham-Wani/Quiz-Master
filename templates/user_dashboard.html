@@ -15,6 +15,7 @@
             color: #333;
             margin: 0;
             padding: 20px;
+            height: 100vh;
         }
 
         .container {
@@ -124,6 +125,9 @@
             <button class="tab-btn active" onclick="showTab('quizzes', this)">Attempt</button>
             <button class="tab-btn" onclick="showTab('attempts', this)">History</button>
             <button class="tab-btn" onclick="showTab('charts', this)">Performance</button>
+            <a href="../logout" style="all:unset" class="tab-btn">
+                <button class="tab-btn">Logout</button>
+            </a>
         </div>
 
         <section id="quizzes" class="tab-content" style="display: block;">
@@ -153,7 +157,9 @@
                     <b>{% for quiz in quizzes %}
                         {% if attempt[2] == quiz[0] %} {{ quiz[1] }} {% endif %}
                         {% endfor %} ({{ attempt[2] }})</b> - {{ attempt[4][8:10] }}-{{ attempt[4][5:7] }}-{{
-                    attempt[4][0:4] }} {{ attempt[4][11:16] }}<br>Score: {{ attempt[3] }}
+                    attempt[4][0:4] }} {{ attempt[4][11:16] }}<br>Score: {{ attempt[3] }} / {% for quiz in quizzes %}
+                    {% if attempt[2] == quiz[0] %} {{ quiz[8] }} {% endif %}
+                    {% endfor %}
                 </li>
                 {% endfor %}
             </ul>
@@ -192,7 +198,8 @@
                 if (!quizData[entry.qid]) {
                     quizData[entry.qid] = {
                         title: entry.title,
-                        attempts: []
+                        attempts: [],
+                        questions: entry.questions
                     };
                 }
                 quizData[entry.qid].attempts.push({
@@ -229,7 +236,8 @@
                         responsive: true,
                         scales: {
                             y: {
-                                beginAtZero: true
+                                beginAtZero: true,
+                                max: quizData[qid].questions
                             }
                         }
                     }

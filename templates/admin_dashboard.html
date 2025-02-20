@@ -6,23 +6,209 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Dashboard</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+
+        body {
+            font-family: Poppins, serif;
+            background: linear-gradient(135deg, #ff6600, #ffdbca);
+            color: #333;
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+            height: 100%;
+            overflow-y: auto;
+        }
+
+        h2,
+        h3,
+        h4 {
+            color: #FF6600;
+            text-align: center;
+            margin: 10px 0;
+        }
+
+        h4 {
+            text-align: left !important;
+        }
+
+        .tab-btn {
+            background: #FF6600;
+            color: #fff;
+            border: none;
+            padding: 10px 15px;
+            margin: 0 5px;
+            cursor: pointer;
+            border-radius: 5px;
+            font-weight: bold;
+            font-size: medium;
+            transition: background 0.3s;
+        }
+
+        .tab-btn:hover,
+        .tab-btn.active {
+            background: #b44800;
+        }
+
+        .nav-links {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 20px auto;
+            background: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .form-container {
+            background: #f9f9f9;
+            padding: 15px;
+            margin-top: 10px;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .form-container input,
+        .form-container select {
+            width: calc(100% - 25px);
+            padding: 10px;
+            margin: 5px 0;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            transition: border 0.3s;
+        }
+
+        .form-container input[type="checkbox"] {
+            width: 20px;
+            text-align: left;
+            display: inline;
+        }
+
+        .form-container input:focus,
+        .form-container select:focus {
+            border-color: #ff6600;
+            outline: none;
+        }
+
+        .form-container button {
+            width: 100%;
+            background: #FF6600;
+            color: white;
+            border: none;
+            padding: 10px;
+            font-size: 16px;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: background 0.3s;
+            font-weight: 500;
+        }
+
+        .form-container button:hover {
+            background-color: #b44800;
+        }
+
+        #search-form input {
+            width: calc(100% - 25px);
+            padding: 10px;
+            margin: 5px 0;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            transition: border 0.3s;
+        }
+
+        .list {
+            list-style-type: none;
+            padding: 0;
+            margin-top: 10px;
+        }
+
+        .list-item {
+            list-style-type: none;
+            background: linear-gradient(135deg, #fff3f3, #ffd9ca);
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .list-item .list-item {
+            background: linear-gradient(135deg, #ffd9ca, #fff3f3);
+        }
+
+        .list-item .list-item .list-item {
+            background: linear-gradient(135deg, #fff3f3, #ffd9ca);
+        }
+
+        .list-item strong {
+            color: #333;
+        }
+
+        .btn {
+            background-color: #FF6600;
+            color: white;
+            padding: 8px 12px;
+            margin: 5px auto;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background 0.3s;
+            font-weight: 500;
+        }
+
+        .btn:hover {
+            background-color: #b44800;
+        }
+
+        .btn-view {
+            background-color: #353bdc;
+        }
+
+        .btn-delete {
+            background-color: #dc3545;
+        }
+
+        .btn-delete:hover {
+            background-color: #c82333;
+        }
+
+        .error-message {
+            color: red;
+            display: none;
+            font-size: 14px;
+        }
+
+        .chart-container {
+            width: 100%;
+            max-width: 600px;
+            margin: 20px auto;
+        }
+    </style>
 </head>
 
 <body>
-    <h2>Admin Dashboard</h2>
+    <div class="container">
+        <h2>Admin Dashboard</h2>
 
-    <!-- Manage Subjects -->
-    <a href="#" onclick="toggleVisibility('subjects-container')">Manage Subjects</a> |
-    <a href="#" onclick="toggleVisibility('quizzes-container')">Manage Quizzes</a> |
-    <a href="#" onclick="toggleVisibility('search-container')">Search</a> |
-    <a href="#" onclick="toggleVisibility('charts-container')">View Summary</a>
+        <div class="nav-links">
+            <button class="tab-btn" onclick="toggleVisibility('subjects-container')">Subjects</button>
+            <button class="tab-btn" onclick="toggleVisibility('quizzes-container')">Quizzes</button>
+            <button class="tab-btn" onclick="toggleVisibility('search-container')">Search</button>
+            <button class="tab-btn" onclick="toggleVisibility('charts-container')">Summary</button>
+            <a href="./user" style="all:unset" class="tab-btn">
+                <button class="tab-btn">User</button>
+            </a>
+        </div>
+    </div>
 
-    <div id="subjects-container" style="display: none;">
+    <div id="subjects-container" class="container">
         <h3>Subjects</h3>
-        <button onclick="toggleVisibility('add-subject-form')">+ Add Subject</button>
+        <button class="btn" onclick="toggleVisibility('add-subject-form')">+ Add Subject</button>
 
-        <!-- Add Subject Form -->
-        <div id="add-subject-form" style="display: none;">
+        <div id="add-subject-form" class="form-container" style="display: none;">
             <form method="POST">
                 <input type="hidden" name="action" value="add_subject">
                 <label>Subject Name:</label>
@@ -33,22 +219,21 @@
             </form>
         </div>
 
-        <ul>
+        <ul class="list">
             {% for subject in subjects %}
-            <li>
-                <strong>ID: {{ subject[0] }}</strong> - {{ subject[1] }}
-                <a href="#" onclick="toggleVisibility('chapters-{{ subject[0] }}')">View Chapters</a>
-
-                <!-- Add Chapter Form -->
-                <button onclick="toggleVisibility('add-chapter-form-{{ subject[0] }}')">+ Add Chapter</button>
-                <button onclick="toggleVisibility('edit-subject-form-{{ subject[0] }}')">Edit</button>
+            <li class="list-item">
+                <strong>ID: {{ subject[0] }}</strong> - {{ subject[1] }}<br>
+                <button class="btn btn-view" onclick="toggleVisibility('chapters-{{ subject[0] }}')">View
+                    Chapters</button>
+                <button class="btn" onclick="toggleVisibility('add-chapter-form-{{ subject[0] }}')">+ Add
+                    Chapter</button>
+                <button class="btn" onclick="toggleVisibility('edit-subject-form-{{ subject[0] }}')">Edit</button>
                 <form method="POST" style="display:inline;">
                     <input type="hidden" name="action" value="delete_subject">
                     <input type="hidden" name="subject_id" value="{{ subject[0] }}">
-                    <button type="submit">Delete</button>
+                    <button type="submit" class="btn btn-delete">Delete</button>
                 </form>
-                <!-- Edit Subject Form -->
-                <div id="edit-subject-form-{{ subject[0] }}" style="display: none;">
+                <div id="edit-subject-form-{{ subject[0] }}" class="form-container" style="display: none;">
                     <form method="POST">
                         <input type="hidden" name="action" value="edit_subject">
                         <input type="hidden" name="subject_id" value="{{ subject[0] }}">
@@ -57,7 +242,7 @@
                         <button type="submit">Update</button>
                     </form>
                 </div>
-                <div id="add-chapter-form-{{ subject[0] }}" style="display: none;">
+                <div id="add-chapter-form-{{ subject[0] }}" class="form-container" style="display: none;">
                     <form method="POST">
                         <input type="hidden" name="action" value="add_chapter">
                         <input type="hidden" name="subject_id" value="{{ subject[0] }}">
@@ -69,24 +254,23 @@
                     </form>
                 </div>
 
-                <!-- Chapters List -->
-                <ul id="chapters-{{ subject[0] }}" style="display: none;">
+                <ul id="chapters-{{ subject[0] }}" class="list" style="display: none;">
                     {% for chapter in chapters[subject[0]] %}
-                    <li>
-                        <strong>ID: {{ chapter[0] }}</strong> - {{ chapter[2] }}
-                        <a href="#" onclick="toggleVisibility('questions-{{ chapter[0] }}')">View Questions</a>
-
-                        <!-- Add Question Form -->
-                        <button onclick="toggleVisibility('add-question-form-{{ chapter[0] }}')">+ Add Question</button>
-                        <button onclick="toggleVisibility('edit-chapter-form-{{ chapter[0] }}')">Edit</button>
+                    <li class="list-item">
+                        <strong>ID: {{ chapter[0] }}</strong> - {{ chapter[2] }} <br>
+                        <button class="btn btn-view" onclick="toggleVisibility('questions-{{ chapter[0] }}')">View
+                            Questions</button>
+                        <button class="btn" onclick="toggleVisibility('add-question-form-{{ chapter[0] }}')">+ Add
+                            Question</button>
+                        <button class="btn"
+                            onclick="toggleVisibility('edit-chapter-form-{{ chapter[0] }}')">Edit</button>
                         <form method="POST" style="display:inline;">
                             <input type="hidden" name="action" value="delete_chapter">
                             <input type="hidden" name="chapter_id" value="{{ chapter[0] }}">
-                            <button type="submit">Delete</button>
+                            <button type="submit" class="btn btn-delete">Delete</button>
                         </form>
 
-                        <!-- Edit Chapter Form -->
-                        <div id="edit-chapter-form-{{ chapter[0] }}" style="display: none;">
+                        <div id="edit-chapter-form-{{ chapter[0] }}" class="form-container" style="display: none;">
                             <form method="POST">
                                 <input type="hidden" name="action" value="edit_chapter">
                                 <input type="hidden" name="chapter_id" value="{{ chapter[0] }}">
@@ -95,48 +279,41 @@
                                 <button type="submit">Update</button>
                             </form>
                         </div>
-                        <div id="add-question-form-{{ chapter[0] }}" style="display: none;">
+                        <div id="add-question-form-{{ chapter[0] }}" class="form-container" style="display: none;">
                             <form method="POST">
                                 <input type="hidden" name="action" value="add_question">
                                 <input type="hidden" name="chapter_id" value="{{ chapter[0] }}">
-
                                 <label>Question:</label>
                                 <input type="text" name="question_statement" required>
-
                                 <label>Option 1:</label>
                                 <input type="text" name="option1" required oninput="updateOptions('{{ chapter[0] }}')">
-
                                 <label>Option 2:</label>
                                 <input type="text" name="option2" required oninput="updateOptions('{{ chapter[0] }}')">
-
                                 <label>Option 3:</label>
                                 <input type="text" name="option3" oninput="updateOptions('{{ chapter[0] }}')" disabled>
-
                                 <label>Option 4:</label>
                                 <input type="text" name="option4" oninput="updateOptions('{{ chapter[0] }}')" disabled>
-
                                 <label>Correct Option:</label>
                                 <input type="number" name="correct_option" id="correct-option-{{ chapter[0] }}" min="1"
                                     max="2" required>
-
                                 <button type="submit">Add</button>
                             </form>
                         </div>
 
-                        <!-- Questions List -->
-                        <ul id="questions-{{ chapter[0] }}" style="display: none;">
+                        <ul id="questions-{{ chapter[0] }}" class="list" style="display: none;">
                             {% for question in questions[chapter[0]] %}
-                            <li>
-                                <strong>ID: {{ question[0] }}</strong> - {{ question[2] }}
-                                <button onclick="toggleVisibility('edit-question-form-{{ question[0] }}')">Edit</button>
+                            <li class="list-item">
+                                <strong>ID: {{ question[0] }}</strong> - {{ question[2] }}<br>
+                                <button class="btn"
+                                    onclick="toggleVisibility('edit-question-form-{{ question[0] }}')">Edit</button>
                                 <form method="POST" style="display:inline;">
                                     <input type="hidden" name="action" value="delete_question">
                                     <input type="hidden" name="question_id" value="{{ question[0] }}">
-                                    <button type="submit">Delete</button>
+                                    <button type="submit" class="btn btn-delete">Delete</button>
                                 </form>
 
-                                <!-- Edit Question Form -->
-                                <div id="edit-question-form-{{ question[0] }}" style="display: none;">
+                                <div id="edit-question-form-{{ question[0] }}" class="form-container"
+                                    style="display: none;">
                                     <form method="POST">
                                         <input type="hidden" name="action" value="edit_question">
                                         <input type="hidden" name="question_id" value="{{ question[0] }}">
@@ -162,23 +339,18 @@
             {% endfor %}
         </ul>
     </div>
-    <!-- Manage Quizzes Section -->
-    <div id="quizzes-container" style="display: none;">
-        <h3>Manage Quizzes</h3>
-        <button onclick="toggleVisibility('add-quiz-form')">+ Create Quiz</button>
 
-        <!-- Create Quiz Form -->
-        <div id="add-quiz-form" style="display: none;">
+    <div id="quizzes-container" class="container" style="display: none;">
+        <h3>Manage Quizzes</h3>
+        <button class="btn" onclick="toggleVisibility('add-quiz-form')">+ Create Quiz</button>
+
+        <div id="add-quiz-form" class="form-container" style="display: none;">
             <form method="POST">
                 <input type="hidden" name="action" value="create_quiz">
-
                 <label>Quiz Title:</label>
                 <input type="text" name="quiz_title" required>
-
                 <label>Description:</label>
                 <input type="text" name="quiz_description">
-
-                <!-- Subject Selection -->
                 <h4>Select a Subject</h4>
                 <select id="subject-selector" name="selected_subject" required onchange="updateChapters()">
                     <option value="">-- Select a Subject --</option>
@@ -186,50 +358,35 @@
                     <option value="{{ subject[0] }}">{{ subject[1] }}</option>
                     {% endfor %}
                 </select>
-
-                <!-- Chapter Selection (filtered by subject) -->
                 <h4>Select a Chapter</h4>
                 <select id="chapter-selector" name="selected_chapter" required onchange="filterQuestions()">
                     <option value="">-- Select a Chapter --</option>
                 </select>
-
-                <!-- Quiz Timing Options -->
                 <h4>Quiz Timing</h4>
                 <label>Start Time:</label>
                 <input type="datetime-local" name="start_time" id="start_time" onchange="validateStartTime()">
-
                 <label>End Time:</label>
                 <input type="datetime-local" name="end_time" id="end_time" onchange="validateEndTime()">
-
                 <label>Duration (in minutes, leave empty for unlimited):</label>
                 <input type="number" name="duration" id="duration" min="1" onchange="validateDuration()">
-
-                <p id="time-error" style="color: red; display: none;">End time must be after start time!</p>
-                <p id="duration-error" style="color: red; display: none;">Duration cannot be more than the available
-                    time!</p>
-
-                <!-- Question Selection (filtered by chapter) -->
+                <p id="time-error" class="error-message">End time must be after start time!</p>
+                <p id="duration-error" class="error-message">Duration cannot be more than the available time!</p>
                 <h4>Select Questions (Only from the selected chapter)</h4>
                 <div id="question-container"></div>
-
-                <!-- Submit Button -->
                 <button type="submit">Create Quiz</button>
             </form>
         </div>
-
-        <h3>Existing Quizzes</h3>
-        <ul>
+        <ul class="list">
             {% for quiz in quizzes %}
-            <li><strong>{{ quiz[1] }}</strong> - {{ quiz[2] }}
-                <button onclick="toggleVisibility('edit-quiz-form-{{ quiz[0] }}')">Edit</button>
+            <li class="list-item"><strong>{{ quiz[0] }}: {{ quiz[1] }}</strong> - {{ quiz[2] }}
+                <button class="btn" onclick="toggleVisibility('edit-quiz-form-{{ quiz[0] }}')">Edit</button>
                 <form method="POST" style="display:inline;">
                     <input type="hidden" name="action" value="delete_quiz">
                     <input type="hidden" name="quiz_id" value="{{ quiz[0] }}">
-                    <button type="submit">Delete</button>
+                    <button type="submit" class="btn btn-delete">Delete</button>
                 </form>
 
-                <!-- Edit Quiz Form -->
-                <div id="edit-quiz-form-{{ quiz[0] }}" style="display: none;">
+                <div id="edit-quiz-form-{{ quiz[0] }}" class="form-container" style="display: none;">
                     <form method="POST">
                         <input type="hidden" name="action" value="edit_quiz">
                         <input type="hidden" name="quiz_id" value="{{ quiz[0] }}">
@@ -241,56 +398,53 @@
                         <label>Start Time:</label>
                         <input type="datetime-local" name="start_time" value="{{ quiz[5] }}"
                             id="edit_start_time_{{ quiz[0] }}" required onchange="validateEditStartTime({{ quiz[0] }})">
-
                         <label>End Time:</label>
                         <input type="datetime-local" name="end_time" value="{{ quiz[6] }}"
                             id="edit_end_time_{{ quiz[0] }}" required onchange="validateEditEndTime({{ quiz[0] }})">
-
                         <label>Duration (in minutes, leave empty for unlimited):</label>
                         <input type="number" name="duration" value="{{ quiz[7] }}" id="edit_duration_{{ quiz[0] }}"
                             min="1" onchange="validateEditDuration({{ quiz[0] }})">
-
-                        <p id="edit_time_error_{{ quiz[0] }}" style="color: red; display: none;">End time must be after
-                            start time!</p>
-                        <p id="edit_duration_error_{{ quiz[0] }}" style="color: red; display: none;">Duration cannot be
-                            more than the available time!</p>
+                        <p id="edit_time_error_{{ quiz[0] }}" class="error-message">End time must be after start time!
+                        </p>
+                        <p id="edit_duration_error_{{ quiz[0] }}" class="error-message">Duration cannot be more than the
+                            available time!</p>
                         <h4>Select Questions</h4>
-                        <div id="edit-question-container-{{ quiz[0] }}">
+                        <div style="text-align: left!important;" id="edit-question-container-{{ quiz[0] }}">
                             {% for key, tuples in questions.items() %}
                             {% if key == quiz[4] %}
                             {% for tuple in tuples %}
-                            <input type="checkbox" name="selected_questions" value="{{ tuple[0] }}" {% if tuple[0] in
-                                quiz_questions[quiz[0]] %} checked {% endif %}>
-                            <label>{{ tuple[2] }}</label><br>
+                            <input style="text-align: left!important;" type="checkbox" name="selected_questions"
+                                value="{{ tuple[0] }}" {% if tuple[0] in quiz_questions[quiz[0]] %} checked {% endif %}>
+                            <label style="text-align: left!important;">{{ tuple[2] }}</label><br>
                             {% endfor %}
                             {% endif %}
                             {% endfor %}
-
-
                         </div>
-
                         <button type="submit">Update Quiz</button>
                     </form>
                 </div>
             </li>
-
             {% endfor %}
         </ul>
     </div>
 
-    <div id="search-container" style="display: none;">
+    <div id="search-container" class="container" style="display: none;">
         <form id="search-form">
             <input type="text" id="search-input" placeholder="Search..." onkeyup="searchData()">
             <div id="search-results"></div>
         </form>
-        <div id="search-results"></div>
     </div>
 
-    <div id="charts-container" style="display: none;">
-        <canvas id="barChart"></canvas>
-        <canvas id="pieChart"></canvas>
-        <canvas id="doughnutChart"></canvas>
-        <canvas id="lineChart"></canvas>
+    <div id="charts-container" class="container" style="display: none;">
+        <h3>View-Charts</h3>
+        <li class="list-item">
+            <h3>Stats</h3>
+            <canvas id="barChart"></canvas>
+        </li>
+        <li class="list-item">
+            <h3>User Registerations (last 7 days)</h3>
+            <canvas id="lineChart"></canvas>
+        </li>
     </div>
 
     <script>
@@ -300,49 +454,10 @@
         }
 
         function filterQuestions() {
-            var selectedChapter = document.getElementById("chapter-selector").value;
-            document.querySelectorAll(".question-group").forEach(group => {
-                group.style.display = "none";
-            });
-            if (selectedChapter) {
-                document.querySelectorAll(".chapter-" + selectedChapter).forEach(group => {
-                    group.style.display = "block";
-                });
-            }
-        }
-
-        var chapters = {{ chapters | tojson }};
-        var questions = {{ questions | tojson }};
-
-        function updateChapters() {
-            var subjectId = document.getElementById("subject-selector").value;
-            var chapterSelector = document.getElementById("chapter-selector");
-
-            // Reset chapter dropdown
-            chapterSelector.innerHTML = '<option value="">-- Select a Chapter --</option>';
-
-            // Populate chapters based on selected subject
-            if (subjectId && chapters[subjectId]) {
-                chapters[subjectId].forEach(chapter => {
-                    var option = document.createElement("option");
-                    option.value = chapter[0];
-                    option.textContent = chapter[2];
-                    chapterSelector.appendChild(option);
-                });
-            }
-
-            // Reset question container when subject changes
-            document.getElementById("question-container").innerHTML = "";
-        }
-
-        function filterQuestions() {
             var chapterId = document.getElementById("chapter-selector").value;
             var questionContainer = document.getElementById("question-container");
-
-            // Reset question container
             questionContainer.innerHTML = "";
 
-            // Populate questions for the selected chapter
             if (chapterId && questions[chapterId]) {
                 questions[chapterId].forEach(question => {
                     var checkbox = document.createElement("input");
@@ -360,6 +475,26 @@
             }
         }
 
+        var chapters = {{ chapters | tojson }};
+        var questions = {{ questions | tojson }};
+
+        function updateChapters() {
+            var subjectId = document.getElementById("subject-selector").value;
+            var chapterSelector = document.getElementById("chapter-selector");
+            chapterSelector.innerHTML = '<option value="">-- Select a Chapter --</option>';
+
+            if (subjectId && chapters[subjectId]) {
+                chapters[subjectId].forEach(chapter => {
+                    var option = document.createElement("option");
+                    option.value = chapter[0];
+                    option.textContent = chapter[2];
+                    chapterSelector.appendChild(option);
+                });
+            }
+
+            document.getElementById("question-container").innerHTML = "";
+        }
+
         function searchData() {
             let query = document.getElementById("search-input").value;
 
@@ -372,21 +507,21 @@
                     if (data.users.length > 0) {
                         resultsDiv.innerHTML += "<h4>Users</h4>";
                         data.users.forEach(user => {
-                            resultsDiv.innerHTML += `<p>${user[1]} - ${user[2]}</p>`; // Adjust indices based on DB structure
+                            resultsDiv.innerHTML += `<p>${user[0]}: ${user[1]} - ${user[2]}</p>`;
                         });
                     }
 
                     if (data.subjects.length > 0) {
                         resultsDiv.innerHTML += "<h4>Subjects</h4>";
                         data.subjects.forEach(subject => {
-                            resultsDiv.innerHTML += `<p>${subject[1]}</p>`; // Adjust indices
+                            resultsDiv.innerHTML += `<p>${subject[0]}: ${subject[1]}</p>`;
                         });
                     }
 
                     if (data.quizzes.length > 0) {
                         resultsDiv.innerHTML += "<h4>Quizzes</h4>";
                         data.quizzes.forEach(quiz => {
-                            resultsDiv.innerHTML += `<p>${quiz[1]}</p>`; // Adjust indices
+                            resultsDiv.innerHTML += `<p>${quiz[0]}: ${quiz[1]}</p>`;
                         });
                     }
 
@@ -401,54 +536,26 @@
             fetch("/admin/summary_data")
                 .then(response => response.json())
                 .then(data => {
-                    // Bar Chart - Total Users, Subjects, Quizzes, Questions
                     const barCtx = document.getElementById("barChart").getContext("2d");
                     new Chart(barCtx, {
                         type: "bar",
                         data: {
                             labels: ["Users", "Subjects", "Quizzes", "Questions"],
                             datasets: [{
-                                label: "Admin Summary",
+                                label: "Count",
                                 data: [data.total_users, data.total_subjects, data.total_quizzes, data.total_questions],
-                                backgroundColor: ["blue", "green", "orange", "red"]
+                                backgroundColor: "blue"
                             }]
                         }
                     });
 
-                    // Pie Chart - User Distribution
-                    const pieCtx = document.getElementById("pieChart").getContext("2d");
-                    new Chart(pieCtx, {
-                        type: "pie",
-                        data: {
-                            labels: ["Users", "Admins"],
-                            datasets: [{
-                                data: [data.total_users, data.total_admins],
-                                backgroundColor: ["cyan", "purple"]
-                            }]
-                        }
-                    });
-
-                    // Doughnut Chart - Quizzes vs Questions
-                    const doughnutCtx = document.getElementById("doughnutChart").getContext("2d");
-                    new Chart(doughnutCtx, {
-                        type: "doughnut",
-                        data: {
-                            labels: ["Quizzes", "Questions"],
-                            datasets: [{
-                                data: [data.total_quizzes, data.total_questions],
-                                backgroundColor: ["orange", "red"]
-                            }]
-                        }
-                    });
-
-                    // Line Chart - User Registrations Over Time
                     const lineCtx = document.getElementById("lineChart").getContext("2d");
                     new Chart(lineCtx, {
                         type: "line",
                         data: {
                             labels: data.user_registrations.map(entry => entry[0]),
                             datasets: [{
-                                label: "User Registrations (Last 7 Days)",
+                                label: "Users Registered",
                                 data: data.user_registrations.map(entry => entry[1]),
                                 borderColor: "blue",
                                 fill: false
@@ -462,8 +569,8 @@
 
         function getCurrentTime() {
             let now = new Date();
-            now.setMinutes(now.getMinutes() - now.getTimezoneOffset()); // Adjust for timezone offset
-            return now.toISOString().slice(0, 16); // Format for datetime-local
+            now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+            return now.toISOString().slice(0, 16);
         }
 
         function validateStartTime() {
@@ -495,7 +602,7 @@
             if (startTime && endTime && durationInput.value) {
                 let start = new Date(startTime);
                 let end = new Date(endTime);
-                let maxDuration = (end - start) / (1000 * 60);  // Convert milliseconds to minutes
+                let maxDuration = (end - start) / (1000 * 60);
 
                 if (parseInt(durationInput.value) > maxDuration) {
                     durationError.style.display = "block";
@@ -528,7 +635,7 @@
             if (startTime && endTime && durationInput.value) {
                 let start = new Date(startTime);
                 let end = new Date(endTime);
-                let maxDuration = (end - start) / (1000 * 60);  // Convert milliseconds to minutes
+                let maxDuration = (end - start) / (1000 * 60);
 
                 if (parseInt(durationInput.value) > maxDuration) {
                     durationError.style.display = "block";
@@ -548,11 +655,11 @@
             if (startTime && endTime && durationInput.value) {
                 let start = new Date(startTime);
                 let end = new Date(endTime);
-                let maxDuration = (end - start) / (1000 * 60);  // Convert milliseconds to minutes
+                let maxDuration = (end - start) / (1000 * 60);
 
                 if (parseInt(durationInput.value) > maxDuration) {
                     durationError.style.display = "block";
-                    durationInput.value = "";  // Reset invalid duration
+                    durationInput.value = "";
                 } else {
                     durationError.style.display = "none";
                 }
@@ -604,29 +711,15 @@
             if (startTime && endTime && durationInput.value) {
                 let start = new Date(startTime);
                 let end = new Date(endTime);
-                let maxDuration = (end - start) / (1000 * 60);  // Convert milliseconds to minutes
+                let maxDuration = (end - start) / (1000 * 60);
 
                 if (parseInt(durationInput.value) > maxDuration) {
                     durationError.style.display = "block";
-                    durationInput.value = "";  // Reset invalid duration
+                    durationInput.value = "";
                 } else {
                     durationError.style.display = "none";
                 }
             }
-        }
-
-        function validateEditQuizForm(form) {
-            let quizId = form.quiz_id.value;
-            validateEditStartTime(quizId);
-            validateEditEndTime(quizId);
-            validateEditDuration(quizId);
-
-            // Check if any error messages are displayed
-            if (document.getElementById(`edit_time_error_${quizId}`).style.display === "block" ||
-                document.getElementById(`edit_duration_error_${quizId}`).style.display === "block") {
-                return false; // Prevent form submission
-            }
-            return true; // Allow form submission
         }
 
         function updateOptions(chapterId) {
@@ -636,17 +729,14 @@
             let option4 = document.querySelector(`[name="option4"]`);
             let correctOptionInput = document.getElementById(`correct-option-${chapterId}`);
 
-            // Enable next option only if the previous one is filled
             option2.disabled = option1.value.trim() === "";
             option3.disabled = option2.value.trim() === "";
             option4.disabled = option3.value.trim() === "";
 
-            // If option 3 is cleared, reset option 4 as well
             if (option3.value.trim() === "") {
                 option4.value = "";
             }
 
-            // Update max value for correct option
             let count = 0;
             [option1, option2, option3, option4].forEach((opt, index) => {
                 if (opt.value.trim() !== "") {
@@ -667,7 +757,6 @@
                 });
             }
         });
-
     </script>
 
 </body>

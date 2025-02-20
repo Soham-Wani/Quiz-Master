@@ -4,97 +4,177 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Attempt Quiz</title>
+    <title>{{ quiz[1] }}</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
+
+        body {
+            font-family: Poppins, serif;
+            background: linear-gradient(135deg, #ff6600, #ffdbca);
+            color: #333;
+            margin: 0;
+            padding: 20px;
+            height: 100vh;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .quiz-title {
+            text-align: center;
+            color: #FF6600;
+        }
+
+        .quiz-description {
+            text-align: center;
+            font-size: 16px;
+            color: #555;
+        }
+
+        .timer-container {
+            text-align: center;
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        #timer {}
+
+        .question-container {
+            background: #fff;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            border: none;
+        }
+
+        .question-title {
+            font-weight: bold;
+            color: #333;
+            font-size: 18px;
+        }
+
+        .option {
+            display: block;
+            padding: 5px;
+            cursor: pointer;
+        }
+
+        input[type="radio"] {
+            margin-right: 8px;
+        }
+
+        .submit-btn {
+            width: 100%;
+            background: #FF6600;
+            color: white;
+            border: none;
+            padding: 10px;
+            font-size: 16px;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: background 0.3s;
+        }
+
+        .submit-btn:hover {
+            background-color: #b44800;
+        }
+    </style>
+    <script>
+        let score = 0;
+
+        function updateScore() {
+            score = 0;
+            let selectedAnswer;
+            {% for question in questions %}
+            selectedAnswer = document.querySelector('input[name="q{{ question[0] }}"]:checked');
+            if (selectedAnswer && selectedAnswer.value == "{{ question[6] }}") {
+                score++;
+            }
+            {% endfor %}
+
+            document.getElementById("score").value = score;
+        }
+
+        document.getElementById("quiz-form").onsubmit = function (event) {
+            console.log("Final Score on Submit:", score);
+            localStorage.removeItem("quiz_start_time_" + {{ quiz[0] }});
+        };
+    </script>
 </head>
 
 <body>
-    {% if not quiz[5] and not quiz[6] or (quiz[5] and quiz[6] and quiz[5] <= current_time and current_time <=quiz[6]) or
-        (quiz[5] and not quiz[6] and quiz[5] <=current_time) or (not quiz[5] and quiz[6] and current_time <=quiz[6]) %}
-        <h1>{{ quiz[1] }}</h1> <!-- quiz[1] = Title -->
-        <p>{{ quiz[2] }}</p> <!-- quiz[2] = Description -->
+    <div class="container">
+        {% if not quiz[5] and not quiz[6] or (quiz[5] and quiz[6] and quiz[5] <= current_time and current_time
+            <=quiz[6]) or (quiz[5] and not quiz[6] and quiz[5] <=current_time) or (not quiz[5] and quiz[6] and
+            current_time <=quiz[6]) %} <h1 class="quiz-title">{{ quiz[1] }}</h1>
+            <p class="quiz-description">{{ quiz[2] }}</p>
 
-        {% if quiz[3] %} <!-- quiz[3] = Duration (minutes) -->
-        <h3>Time Left: <span id="timer"></span></h3>
-        <script>
-            let timeLimit = {{ quiz[3] * 60 if quiz[3] else 'Infinity' }};
-            let timerElement = document.getElementById("timer");
-            let quizId = {{ quiz[0] }};  // quiz[0] = Quiz ID
+            {% if quiz[3] %}
+            <h3 class="timer-container">Time Left: <span id="timer"></span></h3>
+            <script>
+                let timeLimit = {{ quiz[3] * 60 if quiz[3] else 'Infinity' }};
+                let timerElement = document.getElementById("timer");
+                let quizId = {{ quiz[0] }};
 
-            // Retrieve remaining time from localStorage (prevents refresh reset)
-            let startTime = localStorage.getItem("quiz_start_time_" + quizId);
-            let currentTime = Math.floor(Date.now() / 1000);
+                let startTime = localStorage.getItem("quiz_start_time_" + quizId);
+                let currentTime = Math.floor(Date.now() / 1000);
 
-            if (!startTime) {
-                startTime = currentTime;
-                localStorage.setItem("quiz_start_time_" + quizId, startTime);
-            }
-
-            let elapsedTime = currentTime - startTime;
-            let timeLeft = Math.max(0, timeLimit - elapsedTime);
-
-            function updateTimer() {
-                let minutes = Math.floor(timeLeft / 60);
-                let seconds = timeLeft % 60;
-                timerElement.innerText = `${minutes}:${seconds < 10 ? "0" : ""}${seconds}`;
-                timeLeft--;
-
-                if (timeLeft < 0) {
-                    clearInterval(timerInterval);
-                    localStorage.removeItem("quiz_start_time_" + quizId); // Clear stored time
-                    document.getElementById("quiz-form").submit(); // Auto-submit
+                if (!startTime) {
+                    startTime = currentTime;
+                    localStorage.setItem("quiz_start_time_" + quizId, startTime);
                 }
-            }
 
-            let timerInterval = setInterval(updateTimer, 1000);
-            updateTimer();
-        </script>
-        {% endif %}
+                let elapsedTime = currentTime - startTime;
+                let timeLeft = Math.max(0, timeLimit - elapsedTime);
 
-        <script>
-            let score = 0; // Initialize score
+                function updateTimer() {
+                    let minutes = Math.floor(timeLeft / 60);
+                    let seconds = timeLeft % 60;
+                    timerElement.innerText = `${minutes}:${seconds < 10 ? "0" : ""}${seconds}`;
+                    timeLeft--;
 
-            function updateScore() {
-                score = 0; // Reset score before recalculating
-                let selectedAnswer;
+                    if (timeLeft < 0) {
+                        clearInterval(timerInterval);
+                        localStorage.removeItem("quiz_start_time_" + quizId);
+                        document.getElementById("quiz-form").submit();
+                    }
+                }
+
+                let timerInterval = setInterval(updateTimer, 1000);
+                updateTimer();
+            </script>
+            {% endif %}
+
+            <form method="POST" id="quiz-form">
                 {% for question in questions %}
-                // Use a different variable name for each question
-                selectedAnswer = document.querySelector('input[name="q{{ question[0] }}"]:checked');
-                if (selectedAnswer && selectedAnswer.value == "{{ question[6] }}") { // Correct answer check
-                    score++;
-                }
+                <fieldset class="question-container">
+                    <legend class="question-title">{{ question[1] }}</legend>
+                    <label class="option"><input type="radio" name="q{{ question[0] }}" value="1"
+                            onchange="updateScore()"> {{ question[2] }}</label>
+                    <label class="option"><input type="radio" name="q{{ question[0] }}" value="2"
+                            onchange="updateScore()"> {{ question[3] }}</label>
+                    {% if question[4] %} <label class="option"><input type="radio" name="q{{ question[0] }}" value="3"
+                            onchange="updateScore()"> {{ question[4] }}</label> {% endif %}
+                    {% if question[5] %} <label class="option"><input type="radio" name="q{{ question[0] }}" value="4"
+                            onchange="updateScore()"> {{ question[5] }}</label> {% endif %}
+                </fieldset>
                 {% endfor %}
+                <input type="hidden" name="score" id="score">
+                <button type="submit" class="submit-btn">Submit</button>
+            </form>
 
-                document.getElementById("score").value = score;
-            }
-        </script>
+            {% else %}
+            <p class="quiz-description">This quiz is not available at the moment.</p>
+            {% endif %}
+    </div>
 
-        <form method="POST" id="quiz-form">
-            {% for question in questions %}
-            <fieldset>
-                <legend>{{ question[1] }}</legend> <!-- question[1] = Question Statement -->
-                <label><input type="radio" name="q{{ question[0] }}" value="1" onchange="updateScore()"> {{ question[2] }}</label>
-                <!-- Option 1 -->
-                <label><input type="radio" name="q{{ question[0] }}" value="2" onchange="updateScore()"> {{ question[3] }}</label>
-                <!-- Option 2 -->
-                {% if question[4] %} <label><input type="radio" name="q{{ question[0] }}" value="3" onchange="updateScore()"> {{ question[4] }}</label> {% endif %} <!-- Option 3 -->
-                {% if question[5] %} <label><input type="radio" name="q{{ question[0] }}" value="4" onchange="updateScore()"> {{ question[5] }}</label> {% endif %} <!-- Option 4 -->
-            </fieldset>
-            {% endfor %}
-            <input type="hidden" name="score" id="score">
-            <button type="submit">Submit</button>
-        </form>
-
-        <script>
-            // Ensure form submits correctly
-            document.getElementById("quiz-form").onsubmit = function (event) {
-                console.log("Final Score on Submit:", score);
-                localStorage.removeItem("quiz_start_time_" + {{ quiz[0] }});
-            };
-        </script>
-
-        {% else %}
-        This quiz is not available at the moment.
-        {% endif %}
 
 </body>
 
