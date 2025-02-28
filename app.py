@@ -164,7 +164,6 @@ def admin_dashboard():
             cursor.execute("DELETE FROM Question WHERE id = ?", (question_id,))
             connection.commit()
 
-        # Create Quiz
         elif action == "create_quiz":
             quiz_title = request.form.get("quiz_title")
             quiz_description = request.form.get("quiz_description")
