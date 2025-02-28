@@ -329,7 +329,7 @@ def admin_summary_data():
     cursor.execute("""
         SELECT strftime('%Y-%m-%d', created_at) AS reg_date, COUNT(*)
         FROM User
-        WHERE dob >= date('now', '-7 days')
+        WHERE created_at >= date('now', '-7 days') AND role='user'
         GROUP BY reg_date
     """)
     user_registrations = cursor.fetchall()
@@ -368,7 +368,7 @@ def user_dashboard():
         users = cursor.fetchall()
 
         conn.close()
-        current_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        current_time = datetime.now().strftime('%Y-%m-%dT%H:%M')
         return render_template("user_dashboard.html", quizzes=quizzes, quiz_attempts=quiz_attempts, current_time=current_time, users=users)
     return redirect(url_for("home"))
 
@@ -419,7 +419,7 @@ def attempt_quiz(quiz_id):
         WHERE qq.quiz_id = ?
     """, (quiz_id,))
     questions = cursor.fetchall()
-    current_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    current_time = datetime.now().strftime('%Y-%m-%dT%H:%M')
 
     conn.close()
 

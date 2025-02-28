@@ -775,7 +775,6 @@
         });
 
         document.addEventListener("DOMContentLoaded", function () {
-            // Restore visibility of chapters and questions
             document.querySelectorAll("[id^='chapters-'], [id^='questions-']").forEach(container => {
                 const containerId = container.id;
                 if (localStorage.getItem(containerId) === "block") {
@@ -783,17 +782,14 @@
                 }
             });
 
-            // Intercept all form submissions
             document.querySelectorAll("form").forEach(form => {
                 form.addEventListener("submit", function (event) {
-                    event.preventDefault(); // Prevent instant reload
+                    event.preventDefault();
 
-                    // Store visibility state of chapters and questions before submission
                     document.querySelectorAll("[id^='chapters-'], [id^='questions-']").forEach(container => {
                         localStorage.setItem(container.id, container.style.display);
                     });
 
-                    // Submit the form after a short delay
                     setTimeout(() => {
                         form.submit();
                     }, 300);

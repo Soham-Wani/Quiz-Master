@@ -167,7 +167,7 @@
                 </fieldset>
                 {% endfor %}
                 <input type="hidden" name="score" id="score">
-                <button type="submit" class="submit-btn">Submit</button>
+                <button type="submit" class="submit-btn" onclick="localStorage.removeItem('quiz_start_time_' + quizId)">Submit</button>
             </form>
 
             {% else %}
