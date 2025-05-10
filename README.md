@@ -28,3 +28,8 @@ quiz-master/
 ## Screenshots
 
 ![1](https://i.ibb.co/gb5n1yDk/Screenshot-2025-05-10-232847.png)
+![2](https://i.ibb.co/LdxQQv3t/Screenshot-2025-05-10-232900.png)
+![3](https://i.ibb.co/Kj0QyVrH/Screenshot-2025-05-10-232934.png)
+![4](https://i.ibb.co/GDq3j57/Screenshot-2025-05-10-232948.png)
+![5](https://i.ibb.co/sdssscx5/Screenshot-2025-05-10-233024.png)
+![6](https://i.ibb.co/Z18hnwRt/Screenshot-2025-05-10-233125.png)
