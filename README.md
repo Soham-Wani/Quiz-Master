@@ -24,3 +24,7 @@ quiz-master/
 - **Database**: SQLite  
 - **Templating**: Jinja2
 - **Others**: logging, hashlib, datetime, ChartJS, etc.
+
+## Screenshots
+
+![1](https://i.ibb.co/gb5n1yDk/Screenshot-2025-05-10-232847.png)
