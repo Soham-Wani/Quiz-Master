@@ -2,6 +2,7 @@
 Quiz Master v1 is a web-based quiz platform designed to offer an interactive and user-friendly experience, allowing users to attempt quizzes of their choice, track their scores, and analyze their performance through summary charts. The platform features a dynamic user dashboard, optional timers for quizzes, and a structured quiz database that ensures availability based on set durations.
 
 > This project was developed as part of the **"Modern Application Development - I"** course under the **BS in Data Science and Applications** program offered by IIT Madras.
+> Graded S (Outstanding) for successfully completing the project.
 
 ## Project Structure
 
